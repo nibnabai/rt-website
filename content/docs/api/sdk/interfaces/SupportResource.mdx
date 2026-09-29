@@ -1,0 +1,111 @@
+---
+title: "SupportResource"
+---
+
+The support endpoints, available as `client.support`.
+
+## Methods
+
+### getBackfill()
+
+```ts
+getBackfill(id): Promise<{
+  error?: string;
+  id: string;
+  status: string;
+}>;
+```
+
+Returns the status of an import started with `startBackfill`. Calls
+`GET /v1/support/backfill/{id}`.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+
+#### Returns
+
+`Promise`\<\{
+  `error?`: `string`;
+  `id`: `string`;
+  `status`: `string`;
+\}\>
+
+***
+
+### sendBatch()
+
+```ts
+sendBatch(conversations): Promise<{
+  accepted: number;
+  workflow_ids: string[];
+}>;
+```
+
+Uploads up to 50 full conversations in one signed request. Calls
+`POST /v1/support/conversations/batch`.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `conversations` | `Conversation`[] |
+
+#### Returns
+
+`Promise`\<\{
+  `accepted`: `number`;
+  `workflow_ids`: `string`[];
+\}\>
+
+***
+
+### sendEvent()
+
+```ts
+sendEvent(event): Promise<{
+  workflow_id: string;
+}>;
+```
+
+Sends a conversation that was created or changed, signed with your signing
+secret. Calls `POST /v1/support/events`.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `event` | `SupportEventV1` |
+
+#### Returns
+
+`Promise`\<\{
+  `workflow_id`: `string`;
+\}\>
+
+***
+
+### startBackfill()
+
+```ts
+startBackfill(request?): Promise<{
+  id: string;
+}>;
+```
+
+Asks RipeText to import your history from your adapter. Calls
+`POST /v1/support/backfill`.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `request?` | `BackfillRequest` |
+
+#### Returns
+
+`Promise`\<\{
+  `id`: `string`;
+\}\>

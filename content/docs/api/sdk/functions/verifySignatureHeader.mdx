@@ -1,0 +1,28 @@
+---
+title: "verifySignatureHeader()"
+---
+
+```ts
+function verifySignatureHeader(
+   secret, 
+   header, 
+   rawBody, 
+   maxSkewMs?
+): boolean;
+```
+
+Checks a `t=<timestamp>,v1=<digest>` header against a body, rejecting it when
+the timestamp is more than `maxSkewMs` away from now.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `secret` | `string` |
+| `header` | `string` |
+| `rawBody` | `string` \| `Buffer` |
+| `maxSkewMs` | `number` |
+
+## Returns
+
+`boolean`

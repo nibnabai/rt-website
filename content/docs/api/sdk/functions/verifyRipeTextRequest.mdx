@@ -1,0 +1,28 @@
+---
+title: "verifyRipeTextRequest()"
+---
+
+```ts
+function verifyRipeTextRequest(input): boolean;
+```
+
+Verifies a request RipeText sent to your adapter. RipeText signs
+`timestamp.METHOD.path.body` with your adapter signing secret, where `path`
+includes the query string. While a secret rotation is in progress the header
+carries one `v1` per valid secret, and a match on any of them is accepted.
+
+## Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `input` | \{ `body?`: `string` \| `Buffer`; `header`: `string` \| `string`[] \| `undefined`; `maxSkewMs?`: `number`; `method`: `string`; `path`: `string`; `secret?`: `string`; \} | - |
+| `input.body?` | `string` \| `Buffer` | - |
+| `input.header` | `string` \| `string`[] \| `undefined` | The raw header value; Node's `req.headers[...]` shape is accepted as-is. |
+| `input.maxSkewMs?` | `number` | - |
+| `input.method` | `string` | - |
+| `input.path` | `string` | - |
+| `input.secret?` | `string` | Defaults to `RIPETEXT_ADAPTER_SIGNING_SECRET`. |
+
+## Returns
+
+`boolean`

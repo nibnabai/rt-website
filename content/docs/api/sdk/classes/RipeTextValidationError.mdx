@@ -1,0 +1,74 @@
+---
+title: "RipeTextValidationError"
+---
+
+A payload that doesn't match the API contract, caught before it is sent, or
+a response that doesn't. `issues` lists each failing field.
+
+## Extends
+
+- `Error`
+
+## Constructors
+
+### Constructor
+
+```ts
+new RipeTextValidationError(operation, issues): RipeTextValidationError;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `operation` | `string` |
+| `issues` | \{ `message`: `string`; `path`: `string`; \}[] |
+
+#### Returns
+
+`RipeTextValidationError`
+
+#### Overrides
+
+```ts
+Error.constructor
+```
+
+## Properties
+
+| Property | Modifier | Type | Description | Inherited from |
+| ------ | ------ | ------ | ------ | ------ |
+| <a id="property-cause"></a> `cause?` | `public` | `unknown` | - | `Error.cause` |
+| <a id="property-issues"></a> `issues` | `readonly` | \{ `message`: `string`; `path`: `string`; \}[] | - | - |
+| <a id="property-message"></a> `message` | `public` | `string` | - | `Error.message` |
+| <a id="property-name"></a> `name` | `public` | `string` | - | `Error.name` |
+| <a id="property-stack"></a> `stack?` | `public` | `string` | - | `Error.stack` |
+| <a id="property-preparestacktrace"></a> `prepareStackTrace?` | `static` | (`err`, `stackTraces`) => `any` | Optional override for formatting stack traces **See** https://v8.dev/docs/stack-trace-api#customizing-stack-traces | `Error.prepareStackTrace` |
+| <a id="property-stacktracelimit"></a> `stackTraceLimit` | `static` | `number` | - | `Error.stackTraceLimit` |
+
+## Methods
+
+### captureStackTrace()
+
+```ts
+static captureStackTrace(targetObject, constructorOpt?): void;
+```
+
+Create .stack property on a target object
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `targetObject` | `object` |
+| `constructorOpt?` | `Function` |
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+```ts
+Error.captureStackTrace
+```

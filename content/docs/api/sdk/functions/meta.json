@@ -1,0 +1,10 @@
+{
+  "title": "Functions",
+  "pages": [
+    "createSignatureHeader",
+    "parseSignatureHeader",
+    "signBody",
+    "verifyRipeTextRequest",
+    "verifySignatureHeader"
+  ]
+}

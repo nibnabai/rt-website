@@ -1,0 +1,95 @@
+---
+title: Salesforce
+description: Import Salesforce Service Cloud cases into RipeText for AI-powered support analytics.
+---
+
+Connect Salesforce to RipeText to import your support cases, emails, and comments for AI-powered analysis.
+
+## Overview
+
+The Salesforce integration lets you:
+
+- Import case history from your Salesforce org
+- Receive live case updates over Salesforce's Pub/Sub event stream
+- Pull the full conversation thread for each case: emails, case comments, and Chatter feed activity
+- Resolve customer contacts, accounts, and agent assignments automatically
+- Analyze case topics, sentiment, and trends
+
+## Prerequisites
+
+- **Salesforce administrator access** — installing the RipeText package requires an admin
+- API access enabled on your Salesforce org, for both the initial import and live updates
+
+## Connecting Salesforce
+
+Salesforce takes two steps rather than one button. RipeText installs as a managed package in your own org, and that has to be in place before authorization can run.
+
+### 1. Install the package
+
+Click **Install in Salesforce**. The install link opens in a new tab, and completing it requires Salesforce administrator access.
+
+### 2. Authorize
+
+Come back to the RipeText tab. The button now reads **Authorize** — click it and approve access. RipeText requests `api`, `refresh_token`, and `offline_access`: enough to read your cases and keep the connection alive without asking you to log in again.
+
+If the install didn't finish, the authorization fails and you can run both steps again.
+
+You can connect Salesforce during onboarding or later from **Settings → Integrations**. Either way, the first successful connection kicks off a historical import automatically.
+
+## What Gets Imported
+
+For each case, RipeText imports:
+
+- **Case details** — subject, description, and whether the case is open or closed
+- **Emails** — email messages on the case, including direction (incoming or outgoing)
+- **Case comments** — including internal comments, which are flagged private but still analyzed
+- **Chatter activity** — feed posts and feed comments on the case
+- **People** — the contact and account behind the case, plus the assigned agent
+
+Whether a case counts as resolved comes from Salesforce's own closed flag, not the status label — so custom status values in your org work without any configuration.
+
+End customers are resolved from the case's account, then its contact, then the supplied email or company on web-to-case records, whichever is found first.
+
+### Field permissions
+
+RipeText only reads fields the connected user can see. At connect time it checks which objects and fields are available and adapts accordingly, so a locked-down permission set means less data rather than a failed import. If something you expect is missing, widen the permissions of the connecting user and reconnect.
+
+## What Happens After Connecting
+
+1. **Historical import** — RipeText imports your past cases using Salesforce's Bulk API, which draws on a separate allocation from your org's normal daily API limits. Depending on volume, this may take a few minutes to several hours.
+2. **Live sync** — New and updated cases stream in continuously. Salesforce has no webhooks, so RipeText subscribes to case and email change events plus a platform event published by the packaged code.
+
+## Package Upgrades
+
+New capabilities occasionally ship as a new package version. When one is available, **Settings → Integrations** shows a notice on the Salesforce connection — _"A new version of the Salesforce integration is available. Your administrator needs to install it once."_ — with an **Open install link** button.
+
+Upgrading keeps your existing authorization — you won't have to reconnect. Only genuinely new permissions will prompt you to approve them.
+
+## Troubleshooting
+
+### Authorization Failed
+
+If the OAuth flow fails:
+
+- Confirm the RipeText package is actually installed in the org you're authorizing
+- Verify you're logging in as a Salesforce administrator
+- Make sure you're authorizing the same org you installed the package into
+
+### Connection Needs Reconnecting
+
+Salesforce revokes access when a password changes, an admin revokes the connected app, or the org's session policies change. RipeText flags the integration as needing a reconnect — re-run the authorize step from **Settings → Integrations**.
+
+### Incomplete Import
+
+If some cases are missing after import:
+
+- Allow up to several hours for a large initial import to complete
+- Cases outside the import lookback window are not included
+- Check that the connecting user has read access to Case and its related objects
+- Check the integration status in **Settings → Integrations**
+
+### Live Updates Are Delayed or Missing
+
+- Salesforce caps daily event delivery per org, and that cap is shared across every application subscribing to events — a busy org can exhaust it
+- Events are replayable for 72 hours. If the connection is interrupted for longer than that, live updates resume from the current moment and cases changed during the gap are not picked up automatically — contact support to backfill them
+- Verify the RipeText package is still installed and its platform event is active

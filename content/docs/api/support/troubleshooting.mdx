@@ -1,0 +1,52 @@
+---
+title: Troubleshooting
+description: Symptoms, causes and where to look.
+---
+
+## Integration API isn't listed
+
+It's enabled per account. Contact RipeText support to have it turned on.
+
+## The adapter address is rejected
+
+RipeText refuses an address whose [health check](/docs/api/support/adapter/health) doesn't pass. The message says which of these it was:
+
+- **Failed to reach the adapter health endpoint**: no connection. Check the address, that the service is running, and that it's reachable from the public internet over HTTPS.
+- **Adapter rejected RipeText's authentication**: your adapter or gateway answered `401` or `403`. Check that the adapter verifies with the **adapter signing secret** from this integration, and check **Manage → Adapter connection** if a gateway credential is configured.
+- **Your token endpoint rejected RipeText's client credentials**: for OAuth 2.0 gateways: check the token URL, client ID and secret, and that your endpoint accepts HTTP Basic client authentication.
+- **Adapter health must declare the support domain**: the body is missing `domains.support`.
+- **Adapter health response did not match the v1 contract**: the body doesn't parse. Compare it with the [health page](/docs/api/support/adapter/health).
+
+Private addresses are refused: your adapter has to be reachable on the public internet.
+
+## Requests fail with 401
+
+| Code                                     | Fix                                                                                                               |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `invalid_client`                         | Wrong client ID or secret, or the credential was revoked                                                          |
+| `unauthorized`, `token_revoked`          | The access token expired or its credential was revoked; get a new one                                             |
+| `missing_signature`, `invalid_signature` | You're signing something other than the exact body, or using the client secret instead of the HMAC signing secret |
+| `signature_expired`                      | Your server's clock has drifted more than five minutes                                                            |
+| `replayed`                               | Those exact bytes were already accepted; sign a fresh request                                                     |
+
+## Requests fail with 403
+
+- **`ip_forbidden`**: the credential has an IP allowlist and the request came from elsewhere. Allowlist the address your traffic leaves your network from, which is usually your NAT gateway, not the container's own address.
+- **`insufficient_scope`**: the credential doesn't cover this endpoint. See [scopes](/docs/api/authentication#scopes).
+
+## Events are accepted but nothing appears
+
+A `202` means the event was received, not that its conversation is stored. Look under **Recent delivery attempts** for a second entry with the same event ID: `unknown_conversation`, `adapter_request_failed`, `adapter_not_configured` and `ingestion_failed` each explain why it didn't land. See [delivery outcomes](/docs/api/support/reference/delivery-outcomes).
+
+## History isn't imported
+
+- [Check the import](/docs/api/support/endpoints/import-status). A `FAILED` import carries the reason.
+- Make sure your list endpoint returns `next_cursor` on every page but the last, and omits it on the last one.
+- An import only runs by itself the first time an adapter is registered. Start another one with [`POST /v1/support/backfill`](/docs/api/support/endpoints/start-import).
+- Large histories take hours. `RUNNING` is not a problem on its own.
+
+## A conversation is missing its people or its notes
+
+- People are matched by `external_id`. Reusing one ID for two people merges them; giving one person two IDs splits them.
+- Internal notes need `is_internal: true` on the message. Without it they're treated as replies to the customer.
+- Bots need `"role": "bot"` on the author, otherwise their replies count as agent work.

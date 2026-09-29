@@ -1,0 +1,73 @@
+---
+title: HubSpot
+description: Import HubSpot Service Hub tickets into RipeText for AI-powered support analytics.
+---
+
+Connect HubSpot Service Hub to RipeText to import tickets, notes, and emails for AI-powered analysis.
+
+## Overview
+
+The HubSpot integration lets you:
+
+- Import ticket history from your HubSpot Service Hub instance
+- Receive real-time ticket updates via webhooks
+- Pull the full conversation thread for each ticket: internal notes and email exchanges
+- Resolve customer contacts, companies, and agent assignments automatically
+- Analyze ticket topics, sentiment, and trends
+
+## Prerequisites
+
+- Admin access to your HubSpot account
+- A HubSpot plan that includes Service Hub
+
+## Connecting HubSpot
+
+You can connect HubSpot in two places:
+
+### During Onboarding
+
+When setting up your RipeText account, you'll be prompted to connect your support platform. Click **Add** next to HubSpot and authorize access. RipeText will automatically kick off a historical import of your tickets so insights are ready from the start.
+
+### From Settings
+
+Go to **Settings → Integrations** in your RipeText dashboard and click **Connect** next to HubSpot. You'll be redirected to HubSpot's OAuth consent screen - review the permissions and click **Grant access**. If this is the first time connecting HubSpot, a historical import will run automatically.
+
+## What Gets Imported
+
+For each ticket, RipeText imports:
+
+- **Ticket details** — subject, description, priority, category, and pipeline stage
+- **Internal notes** — notes your agents attach to the ticket
+- **Emails** — email threads linked to the ticket, including direction (incoming or outgoing)
+- **People** — customer contacts, associated companies, and the assigned agent/owner
+
+## What Happens After Connecting
+
+1. **Historical import** — RipeText imports your past tickets. Depending on volume, this may take a few minutes to several hours.
+2. **Real-time sync** — New tickets, notes, and emails are synced automatically via webhooks going forward.
+
+## Troubleshooting
+
+### Authorization Failed
+
+If the OAuth flow fails:
+
+- Verify you have admin access to HubSpot
+- Ensure your HubSpot plan includes Service Hub with API access
+- Check that third-party app installations are not restricted in your HubSpot account settings
+
+### Incomplete Import
+
+If some tickets are missing after import:
+
+- Archived or deleted tickets may not be available via the API
+- Allow up to 30 minutes for the initial import to complete
+- Check the integration status in **Settings → Integrations**
+
+### Webhooks Not Firing
+
+If new tickets aren't syncing in real time:
+
+- HubSpot webhook delivery can occasionally be delayed
+- Verify the HubSpot app subscription is active in your HubSpot developer portal
+- Try disconnecting and reconnecting the integration from **Settings → Integrations**

@@ -1,0 +1,177 @@
+---
+title: List conversations
+description: The page of conversations RipeText imports from, GET /ripetext/v1/support/conversations.
+---
+
+RipeText walks this endpoint when it imports your history, following your cursor until you stop giving one.
+
+```
+GET {your base URL}/ripetext/v1/support/conversations
+```
+
+## Request
+
+| Parameter       | Type    | Description                                                                                                          |
+| --------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
+| `updated_since` | string  | ISO 8601. Return conversations changed at or after this time.                                                        |
+| `cursor`        | string  | The `next_cursor` from the previous page. Absent on the first request.                                               |
+| `limit`         | integer | How many to return at most. RipeText asks for 50, or fewer near the end of an import. The contract allows up to 100. |
+
+The request carries `X-RipeText-Signature`; `path` for the signature includes the query string.
+
+## Response
+
+`200 OK`:
+
+```json
+{
+  "conversations": [
+    {
+      "external_id": "ticket-1234",
+      "subject": "Refund not received",
+      "status": "closed",
+      "created_at": "2026-08-14T09:02:00Z",
+      "updated_at": "2026-08-15T11:20:00Z",
+      "requester": {
+        "external_id": "cust-77",
+        "name": "Dana Lee",
+        "role": "customer"
+      },
+      "messages": [
+        {
+          "external_id": "msg-1",
+          "body": "I still haven't received my refund.",
+          "author": { "external_id": "cust-77", "role": "customer" },
+          "created_at": "2026-08-14T09:02:00Z"
+        }
+      ]
+    }
+  ],
+  "next_cursor": "eyJvZmZzZXQiOjUwfQ"
+}
+```
+
+| Field           | Type   | Required | Description                                                           |
+| --------------- | ------ | -------- | --------------------------------------------------------------------- |
+| `conversations` | array  | yes      | Full [conversations](/docs/api/support/reference/conversation-format) |
+| `next_cursor`   | string | no       | Where the next page starts. **Omit it on the last page.**             |
+
+## Implementing it
+
+<CodeBlockTabs defaultValue="sdk">
+  <CodeBlockTabsList>
+    <CodeBlockTabsTrigger value="sdk">TypeScript SDK</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="js">JavaScript</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="http">HTTP</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="python">Python</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="python-sdk" disabled>
+      Python SDK (coming soon)
+    </CodeBlockTabsTrigger>
+  </CodeBlockTabsList>
+
+  <CodeBlockTab value="sdk">
+
+```ts
+import { verifyRipeTextRequest } from '@ripetext/api-sdk';
+
+app.get('/ripetext/v1/support/conversations', async (req, res) => {
+  const trusted = verifyRipeTextRequest({
+    header: req.headers['x-ripetext-signature'],
+    method: req.method,
+    path: req.originalUrl
+  });
+  if (!trusted) return res.status(401).end();
+
+  const { tickets, nextCursor } = await listTickets({
+    updatedSince: req.query.updated_since,
+    cursor: req.query.cursor,
+    limit: Number(req.query.limit ?? 50)
+  });
+
+  res.json({
+    conversations: tickets.map(toConversation),
+    next_cursor: nextCursor // omit on the last page
+  });
+});
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="js">
+
+```js
+app.get('/ripetext/v1/support/conversations', async (req, res) => {
+  if (
+    !verify(req.headers['x-ripetext-signature'], req.method, req.originalUrl)
+  ) {
+    return res.status(401).end();
+  }
+
+  const { tickets, nextCursor } = await listTickets({
+    updatedSince: req.query.updated_since,
+    cursor: req.query.cursor,
+    limit: Number(req.query.limit ?? 50)
+  });
+
+  const body = { conversations: tickets.map(toConversation) };
+  if (nextCursor) body.next_cursor = nextCursor;
+  res.json(body);
+});
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="http">
+
+The signature covers the path including the query string:
+
+```http
+GET /ripetext/v1/support/conversations?updated_since=2026-06-25T00%3A00%3A00Z&limit=50 HTTP/1.1
+Host: adapter.example.com
+Accept: application/json
+X-RipeText-Signature: t=1700000000000,v1=<hex digest>
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"conversations":[{"external_id":"ticket-1234","created_at":"2026-08-14T09:02:00Z","requester":{"external_id":"cust-77","role":"customer"},"messages":[]}],"next_cursor":"eyJvZmZzZXQiOjUwfQ"}
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="python">
+
+```python
+@app.get("/ripetext/v1/support/conversations")
+def list_conversations():
+    # Flask, but any framework works the same way. full_path always ends in
+    # "?", which RipeText did not sign, so strip it when there is no query.
+    path = request.full_path.rstrip("?") if not request.query_string else request.full_path
+    if not verify(request.headers.get("X-RipeText-Signature"), request.method, path):
+        return "", 401
+
+    tickets, next_cursor = list_tickets(
+        updated_since=request.args.get("updated_since"),
+        cursor=request.args.get("cursor"),
+        limit=int(request.args.get("limit", 50)),
+    )
+
+    body = {"conversations": [to_conversation(t) for t in tickets]}
+    if next_cursor:
+        body["next_cursor"] = next_cursor
+    return body
+```
+
+  </CodeBlockTab>
+</CodeBlockTabs>
+
+## Paging
+
+The cursor is yours: any string RipeText can hand back unchanged. An offset, a timestamp, an opaque token from your own database, whatever fits your system.
+
+- **Return `next_cursor` while more pages exist**, and omit it on the last one. An import that never stops receiving a cursor keeps asking.
+- **Respect `limit`.** Returning more than asked wastes work. RipeText asks for 50 at a time, and fewer when it is close to the import's cap.
+- **Keep the order stable**, usually by `updated_at` ascending, so a conversation isn't skipped between pages.
+
+## Notes
+
+- **`updated_since` is a filter, not a promise.** Returning a little more than asked is harmless: conversations are matched by `external_id` and updated in place.
+- **An empty page ends the import.** Return `{ "conversations": [] }` with no cursor when there's nothing in the window.
+- **Errors are retried.** A `429` or `5xx` is retried with backoff; if the retries run out, the import ends as `FAILED` with the reason.

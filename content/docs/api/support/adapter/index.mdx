@@ -1,0 +1,472 @@
+---
+title: Building an adapter
+description: The small HTTPS service RipeText calls to import your history and fetch conversations.
+---
+
+An adapter is a service you host that answers three `GET` requests from RipeText. You need one only if RipeText should **pull** from your systems: to import history, and to fetch a conversation when you [send only its ID](/docs/api/support/endpoints/send-event). If you always send full conversations, skip it.
+
+## The contract
+
+Everything lives under a base URL you register, such as `https://adapter.example.com`:
+
+| Endpoint                                                                                    | Purpose                                          |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| [`GET /ripetext/v1/health`](/docs/api/support/adapter/health)                               | Prove the adapter is up and say what it supports |
+| [`GET /ripetext/v1/support/conversations`](/docs/api/support/adapter/list-conversations)    | A page of conversations, for imports             |
+| [`GET /ripetext/v1/support/conversations/{id}`](/docs/api/support/adapter/get-conversation) | One conversation                                 |
+
+Conversations use the same [format](/docs/api/support/reference/conversation-format) as the ones you send.
+
+## A complete adapter
+
+Replace `listTickets`, `getTicket` and `toConversation` with your own lookups. The raw request and response for each endpoint are on its own page: [health](/docs/api/support/adapter/health), [list](/docs/api/support/adapter/list-conversations) and [get](/docs/api/support/adapter/get-conversation).
+
+<CodeBlockTabs defaultValue="sdk">
+  <CodeBlockTabsList>
+    <CodeBlockTabsTrigger value="sdk">TypeScript SDK</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="js">JavaScript</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="http">HTTP</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="python">Python</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="python-sdk" disabled>
+      Python SDK (coming soon)
+    </CodeBlockTabsTrigger>
+  </CodeBlockTabsList>
+
+  <CodeBlockTab value="sdk">
+
+```js
+import { createServer } from 'node:http';
+import { verifyRipeTextRequest } from '@ripetext/api-sdk';
+
+createServer(async (req, res) => {
+  // Reads RIPETEXT_ADAPTER_SIGNING_SECRET
+  const trusted = verifyRipeTextRequest({
+    header: req.headers['x-ripetext-signature'],
+    method: req.method,
+    path: req.url
+  });
+  if (!trusted) {
+    return res.writeHead(401).end();
+  }
+
+  const url = new URL(req.url, 'http://adapter');
+  const send = (body) =>
+    res
+      .writeHead(200, { 'Content-Type': 'application/json' })
+      .end(JSON.stringify(body));
+
+  if (url.pathname === '/ripetext/v1/health') {
+    return send({
+      status: 'ok',
+      version: '1',
+      domains: {
+        support: {
+          resources: ['conversations'],
+          capabilities: ['historical', 'events']
+        }
+      }
+    });
+  }
+
+  if (url.pathname === '/ripetext/v1/support/conversations') {
+    const { tickets, nextCursor } = await listTickets({
+      updatedSince: url.searchParams.get('updated_since'),
+      cursor: url.searchParams.get('cursor'),
+      limit: Number(url.searchParams.get('limit') ?? 50)
+    });
+    return send({
+      conversations: tickets.map(toConversation),
+      next_cursor: nextCursor
+    });
+  }
+
+  const match = url.pathname.match(
+    /^\/ripetext\/v1\/support\/conversations\/(.+)$/
+  );
+  if (match) {
+    const ticket = await getTicket(decodeURIComponent(match[1]));
+    return ticket
+      ? send({ conversation: toConversation(ticket) })
+      : res.writeHead(404).end();
+  }
+
+  res.writeHead(404).end();
+}).listen(process.env.PORT ?? 3000);
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="js">
+
+The same server without the SDK, verifying the signature by hand:
+
+```js
+import { createServer } from 'node:http';
+import { createHmac, timingSafeEqual } from 'node:crypto';
+
+const SECRET = process.env.RIPETEXT_ADAPTER_SIGNING_SECRET;
+
+function verify(header, method, path) {
+  if (!header) return false;
+  let timestamp;
+  const digests = [];
+  for (const part of header.split(',')) {
+    const [key, value] = part.split('=');
+    if (key === 't') timestamp = value;
+    if (key === 'v1') digests.push(value);
+  }
+  if (!timestamp || Math.abs(Date.now() - Number(timestamp)) > 300_000) {
+    return false;
+  }
+  const expected = createHmac('sha256', SECRET)
+    .update(`${timestamp}.${method.toUpperCase()}.${path}.`)
+    .digest();
+  // Two digests arrive for 24 hours after a rotation; accept either.
+  return digests.some((digest) => {
+    const received = Buffer.from(digest, 'hex');
+    return (
+      expected.length === received.length && timingSafeEqual(expected, received)
+    );
+  });
+}
+
+createServer(async (req, res) => {
+  if (!verify(req.headers['x-ripetext-signature'], req.method, req.url)) {
+    return res.writeHead(401).end();
+  }
+
+  const url = new URL(req.url, 'http://adapter');
+  const send = (body) =>
+    res
+      .writeHead(200, { 'Content-Type': 'application/json' })
+      .end(JSON.stringify(body));
+
+  if (url.pathname === '/ripetext/v1/health') {
+    return send({
+      status: 'ok',
+      version: '1',
+      domains: {
+        support: {
+          resources: ['conversations'],
+          capabilities: ['historical', 'events']
+        }
+      }
+    });
+  }
+
+  if (url.pathname === '/ripetext/v1/support/conversations') {
+    const { tickets, nextCursor } = await listTickets({
+      updatedSince: url.searchParams.get('updated_since'),
+      cursor: url.searchParams.get('cursor'),
+      limit: Number(url.searchParams.get('limit') ?? 50)
+    });
+    return send({
+      conversations: tickets.map(toConversation),
+      next_cursor: nextCursor
+    });
+  }
+
+  const match = url.pathname.match(
+    /^\/ripetext\/v1\/support\/conversations\/(.+)$/
+  );
+  if (match) {
+    const ticket = await getTicket(decodeURIComponent(match[1]));
+    return ticket
+      ? send({ conversation: toConversation(ticket) })
+      : res.writeHead(404).end();
+  }
+
+  res.writeHead(404).end();
+}).listen(process.env.PORT ?? 3000);
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="http">
+
+The three exchanges your adapter has to serve, whatever you build it with:
+
+```http
+GET /ripetext/v1/health HTTP/1.1
+Host: adapter.example.com
+X-RipeText-Signature: t=1700000000000,v1=<hex digest>
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"status":"ok","version":"1","domains":{"support":{"resources":["conversations"],"capabilities":["historical","events"]}}}
+```
+
+```http
+GET /ripetext/v1/support/conversations?updated_since=2026-06-25T00%3A00%3A00Z&limit=50 HTTP/1.1
+Host: adapter.example.com
+X-RipeText-Signature: t=1700000000000,v1=<hex digest>
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"conversations":[{"external_id":"ticket-1234","created_at":"2026-08-14T09:02:00Z","requester":{"external_id":"cust-77","role":"customer"},"messages":[]}],"next_cursor":"eyJvZmZzZXQiOjUwfQ"}
+```
+
+```http
+GET /ripetext/v1/support/conversations/ticket-1234 HTTP/1.1
+Host: adapter.example.com
+X-RipeText-Signature: t=1700000000000,v1=<hex digest>
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"conversation":{"external_id":"ticket-1234","created_at":"2026-09-01T09:02:00Z","requester":{"external_id":"cust-77","role":"customer"},"messages":[]}}
+```
+
+A conversation you don't have answers `404`, and a request whose signature doesn't match answers `401`.
+
+  </CodeBlockTab>
+  <CodeBlockTab value="python">
+
+Flask, but any framework works the same way:
+
+```python
+import hashlib
+import hmac
+import os
+import time
+
+from flask import Flask, request
+
+app = Flask(__name__)
+SECRET = os.environ["RIPETEXT_ADAPTER_SIGNING_SECRET"]
+
+
+def verify():
+    header = request.headers.get("X-RipeText-Signature")
+    if not header:
+        return False
+
+    timestamp = None
+    digests = []
+    for part in header.split(","):
+        key, _, value = part.partition("=")
+        if key == "t":
+            timestamp = value
+        elif key == "v1":
+            digests.append(value)
+
+    try:
+        sent_at = int(timestamp)
+    except (TypeError, ValueError):
+        return False
+    if abs(time.time() * 1000 - sent_at) > 300_000:
+        return False
+
+    # full_path always ends in "?", which RipeText did not sign.
+    path = request.full_path if request.query_string else request.path
+    expected = hmac.new(
+        SECRET.encode(),
+        f"{timestamp}.{request.method.upper()}.{path}.".encode(),
+        hashlib.sha256,
+    ).hexdigest()
+
+    # Two digests arrive for 24 hours after a rotation; accept either.
+    return any(hmac.compare_digest(expected, digest) for digest in digests)
+
+
+@app.get("/ripetext/v1/health")
+def health():
+    if not verify():
+        return "", 401
+    return {
+        "status": "ok",
+        "version": "1",
+        "domains": {
+            "support": {
+                "resources": ["conversations"],
+                "capabilities": ["historical", "events"],
+            }
+        },
+    }
+
+
+@app.get("/ripetext/v1/support/conversations")
+def list_conversations():
+    if not verify():
+        return "", 401
+
+    tickets, next_cursor = list_tickets(
+        updated_since=request.args.get("updated_since"),
+        cursor=request.args.get("cursor"),
+        limit=int(request.args.get("limit", 50)),
+    )
+
+    body = {"conversations": [to_conversation(t) for t in tickets]}
+    if next_cursor:
+        body["next_cursor"] = next_cursor
+    return body
+
+
+@app.get("/ripetext/v1/support/conversations/<external_id>")
+def get_conversation(external_id):
+    if not verify():
+        return "", 401
+
+    ticket = get_ticket(external_id)
+    if ticket is None:
+        return "", 404
+
+    return {"conversation": to_conversation(ticket)}
+```
+
+  </CodeBlockTab>
+</CodeBlockTabs>
+
+## Where it has to run
+
+Your adapter must be reachable over **public HTTPS**. Addresses that resolve to private networks are refused when you register them, and again on every call.
+
+## Verifying that a request comes from RipeText
+
+Every request RipeText sends carries an `X-RipeText-Signature` header, signed with the **adapter signing secret** you received when connecting. This secret is separate from your API credentials, so rotating a credential never changes it.
+
+The header is `t=<timestamp>,v1=<hex>`. To verify by hand:
+
+1. Compute HMAC-SHA256 of `timestamp + "." + METHOD + "." + path + "." + body` with the adapter signing secret. `path` includes the query string, and `body` is empty for these `GET` requests.
+2. Accept the request if your digest matches a `v1` value and the timestamp is within five minutes of your clock.
+
+<CodeBlockTabs defaultValue="sdk">
+  <CodeBlockTabsList>
+    <CodeBlockTabsTrigger value="sdk">TypeScript SDK</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="js">JavaScript</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="http">HTTP</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="python">Python</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="python-sdk" disabled>
+      Python SDK (coming soon)
+    </CodeBlockTabsTrigger>
+  </CodeBlockTabsList>
+
+  <CodeBlockTab value="sdk">
+
+```ts
+import { verifyRipeTextRequest } from '@ripetext/api-sdk';
+
+// Reads RIPETEXT_ADAPTER_SIGNING_SECRET, and accepts either secret during a rotation
+const trusted = verifyRipeTextRequest({
+  header: req.headers['x-ripetext-signature'],
+  method: req.method,
+  path: req.originalUrl
+});
+
+if (!trusted) {
+  return res.status(401).end();
+}
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="js">
+
+```js
+import { createHmac, timingSafeEqual } from 'node:crypto';
+
+function verify(header, method, path, secret) {
+  const parts = Object.fromEntries(
+    String(header ?? '')
+      .split(',')
+      .map((part) => part.split('='))
+  );
+  const timestamp = Number(parts.t);
+  if (
+    !Number.isFinite(timestamp) ||
+    Math.abs(Date.now() - timestamp) > 300_000
+  ) {
+    return false;
+  }
+  const expected = createHmac('sha256', secret)
+    .update(`${parts.t}.${method.toUpperCase()}.${path}.`)
+    .digest();
+  const received = Buffer.from(parts.v1 ?? '', 'hex');
+  return (
+    expected.length === received.length && timingSafeEqual(expected, received)
+  );
+}
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="http">
+
+What RipeText sends to your adapter:
+
+```http
+GET /ripetext/v1/support/conversations/ticket-1234 HTTP/1.1
+Host: adapter.example.com
+Accept: application/json
+X-RipeText-Signature: t=1700000000000,v1=<hex digest>
+```
+
+For 24 hours after a rotation the header carries both secrets' digests:
+
+```http
+X-RipeText-Signature: t=1700000000000,v1=<new digest>,v1=<previous digest>
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="python">
+
+```python
+import hashlib
+import hmac
+import os
+import time
+
+
+def verify(header, method, path):
+    if not header:
+        return False
+
+    timestamp = None
+    digests = []
+    for part in header.split(","):
+        key, _, value = part.partition("=")
+        if key == "t":
+            timestamp = value
+        elif key == "v1":
+            digests.append(value)
+
+    try:
+        sent_at = int(timestamp)
+    except (TypeError, ValueError):
+        return False
+    if abs(time.time() * 1000 - sent_at) > 300_000:
+        return False
+
+    expected = hmac.new(
+        os.environ["RIPETEXT_ADAPTER_SIGNING_SECRET"].encode(),
+        f"{timestamp}.{method.upper()}.{path}.".encode(),
+        hashlib.sha256,
+    ).hexdigest()
+
+    # Two v1 values arrive for 24 hours after a rotation; accept either.
+    return any(hmac.compare_digest(expected, digest) for digest in digests)
+```
+
+  </CodeBlockTab>
+</CodeBlockTabs>
+
+**During a rotation the header carries two `v1` values**, one per secret, for 24 hours. Accept a match on either, so your adapter keeps working while you deploy the new secret. The SDK already does this.
+
+## If your adapter sits behind a gateway
+
+Some adapters run behind an API gateway that demands its own credentials. Tell RipeText how to authenticate under **Settings → Integrations → Manage → Adapter connection**:
+
+- **None**: no credentials; rely on the signature above.
+- **API key**: RipeText sends `Authorization: Bearer <your key>` on every request.
+- **OAuth 2.0 client credentials**: enter your token URL, client ID, client secret and an optional scope. RipeText requests a token from your endpoint using HTTP Basic client authentication, sends it as a bearer token, reuses it until it expires, and fetches a fresh one if your adapter answers `401`.
+
+Saving re-runs the health check with the new settings, so a wrong key or token URL is caught immediately. Saved secrets are never shown again; leaving a secret field empty keeps the stored value.
+
+## What RipeText does when your adapter fails
+
+| Your response                              | What happens                                                                         |
+| ------------------------------------------ | ------------------------------------------------------------------------------------ |
+| `404` on a conversation                    | The event is rejected as `unknown_conversation`. No retry.                           |
+| `429` or `5xx`                             | Retried with backoff: the first try plus five retries, over about 35 seconds         |
+| Connection refused, DNS failure, TLS error | Same retries. If they all fail: `adapter_request_failed`, or a `FAILED` import       |
+| `401` or `403`                             | Treated as a configuration problem: no retry, and the address is refused when saving |
+
+Every outcome shows under **Recent delivery attempts**, see [delivery outcomes](/docs/api/support/reference/delivery-outcomes).

@@ -1,0 +1,149 @@
+---
+title: Get a conversation
+description: The endpoint behind reference events, GET /ripetext/v1/support/conversations/{id}.
+---
+
+RipeText calls this when you [send an event carrying only a conversation ID](/docs/api/support/endpoints/send-event), instead of the whole conversation.
+
+```
+GET {your base URL}/ripetext/v1/support/conversations/{external_id}
+```
+
+## Request
+
+| Parameter     | In   | Description                               |
+| ------------- | ---- | ----------------------------------------- |
+| `external_id` | path | The ID you sent in the event, URL-encoded |
+
+The request carries `X-RipeText-Signature`. Decode the ID before looking it up: IDs with slashes or spaces arrive percent-encoded.
+
+## Response
+
+`200 OK`:
+
+```json
+{
+  "conversation": {
+    "external_id": "ticket-1234",
+    "subject": "Refund not received",
+    "status": "open",
+    "created_at": "2026-09-01T09:02:00Z",
+    "requester": {
+      "external_id": "cust-77",
+      "name": "Dana Lee",
+      "role": "customer"
+    },
+    "messages": [
+      {
+        "external_id": "msg-1",
+        "body": "I still haven't received my refund.",
+        "author": { "external_id": "cust-77", "role": "customer" },
+        "created_at": "2026-09-01T09:02:00Z"
+      }
+    ]
+  }
+}
+```
+
+Return the conversation as it is **now**, with all its messages. RipeText uses this to bring its copy up to date, so a partial answer loses the rest.
+
+## Implementing it
+
+<CodeBlockTabs defaultValue="sdk">
+  <CodeBlockTabsList>
+    <CodeBlockTabsTrigger value="sdk">TypeScript SDK</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="js">JavaScript</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="http">HTTP</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="python">Python</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="python-sdk" disabled>
+      Python SDK (coming soon)
+    </CodeBlockTabsTrigger>
+  </CodeBlockTabsList>
+
+  <CodeBlockTab value="sdk">
+
+```ts
+import { verifyRipeTextRequest } from '@ripetext/api-sdk';
+
+app.get('/ripetext/v1/support/conversations/:id', async (req, res) => {
+  const trusted = verifyRipeTextRequest({
+    header: req.headers['x-ripetext-signature'],
+    method: req.method,
+    path: req.originalUrl
+  });
+  if (!trusted) return res.status(401).end();
+
+  const ticket = await getTicket(req.params.id);
+  if (!ticket) return res.status(404).end();
+
+  res.json({ conversation: toConversation(ticket) });
+});
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="js">
+
+```js
+app.get('/ripetext/v1/support/conversations/:id', async (req, res) => {
+  if (
+    !verify(req.headers['x-ripetext-signature'], req.method, req.originalUrl)
+  ) {
+    return res.status(401).end();
+  }
+
+  const ticket = await getTicket(req.params.id);
+  if (!ticket) return res.status(404).end();
+
+  res.json({ conversation: toConversation(ticket) });
+});
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="http">
+
+A conversation RipeText knows nothing about answers `404` instead:
+
+```http
+GET /ripetext/v1/support/conversations/ticket-1234 HTTP/1.1
+Host: adapter.example.com
+Accept: application/json
+X-RipeText-Signature: t=1700000000000,v1=<hex digest>
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"conversation":{"external_id":"ticket-1234","created_at":"2026-09-01T09:02:00Z","requester":{"external_id":"cust-77","role":"customer"},"messages":[]}}
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="python">
+
+```python
+@app.get("/ripetext/v1/support/conversations/<external_id>")
+def get_conversation(external_id):
+    # Flask, but any framework works the same way. full_path always ends in
+    # "?", which RipeText did not sign, so strip it when there is no query.
+    path = request.full_path.rstrip("?") if not request.query_string else request.full_path
+    if not verify(request.headers.get("X-RipeText-Signature"), request.method, path):
+        return "", 401
+
+    ticket = get_ticket(external_id)
+    if ticket is None:
+        return "", 404
+
+    return {"conversation": to_conversation(ticket)}
+```
+
+  </CodeBlockTab>
+</CodeBlockTabs>
+
+## When you don't have it
+
+Answer `404`. RipeText records the event as `unknown_conversation` under **Recent delivery attempts** and doesn't retry, since a missing conversation won't appear by asking again.
+
+Answer `429` or `5xx` if the lookup failed for another reason. Those are retried, and if the retries run out the event is recorded as `adapter_request_failed`.
+
+## Notes
+
+- **This is the only endpoint reference events need.** If you always send full conversations, you can leave it out, and declare only `historical` in your [health response](/docs/api/support/adapter/health).
+- **Keep it fast.** It runs inside ingestion, so slow lookups delay conversations appearing in RipeText.

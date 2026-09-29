@@ -1,0 +1,53 @@
+---
+title: Intercom
+description: Sync your Intercom conversations with RipeText for performance insights.
+---
+
+Connect Intercom to RipeText to analyze your live chat and messaging conversations.
+
+## Overview
+
+The Intercom integration lets you:
+
+- Import conversation history from Intercom
+- Receive real-time updates when conversations are created or updated
+- Track response times, quality, and topic trends
+
+## Prerequisites
+
+- Admin access to your Intercom workspace
+
+## Connecting Intercom
+
+You can connect Intercom in two places:
+
+### During Onboarding
+
+When setting up your RipeText account, you'll be prompted to connect your support platform. After authorizing Intercom, RipeText will automatically kick off a historical import of your conversations so insights are ready from the start.
+
+### From Settings
+
+Go to **Settings → Integrations** in your RipeText dashboard and click **Connect** next to Intercom. You'll be redirected to Intercom's OAuth consent screen — review the permissions and click **Authorize** to grant access. If this is the first time connecting Intercom, a historical import will run automatically.
+
+## What Happens After Connecting
+
+1. **Historical import** — RipeText imports your past conversations. Depending on volume, this may take a few minutes to several hours.
+2. **Real-time sync** — New conversations and updates are synced automatically via webhooks going forward.
+
+## Troubleshooting
+
+### Authorization Failed
+
+If the OAuth flow fails:
+
+- Confirm you have admin privileges in Intercom
+- Ensure your Intercom plan supports API access
+- Try clearing your browser cache and cookies
+
+### Delayed Sync
+
+If conversations aren't syncing in real time:
+
+- Webhook delivery can occasionally be delayed by Intercom
+- Check the integration status in **Settings → Integrations**
+- If delays persist, try disconnecting and reconnecting the integration

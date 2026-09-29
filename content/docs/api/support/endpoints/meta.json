@@ -1,0 +1,4 @@
+{
+  "title": "Endpoints",
+  "pages": ["send-event", "upload-batch", "start-import", "import-status"]
+}

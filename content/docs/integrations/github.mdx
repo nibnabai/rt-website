@@ -1,0 +1,73 @@
+---
+title: GitHub
+description: Import GitHub Issues into RipeText for AI-powered community feedback analytics.
+---
+
+Connect a public GitHub repository to RipeText to analyze issues and community feedback at scale.
+
+## Overview
+
+The GitHub integration lets you:
+
+- Import issue history from any public GitHub repository
+- Receive real-time updates when new issues and comments are created via webhooks
+- Analyze issue topics, sentiment, and community engagement patterns
+
+## Prerequisites
+
+- A public GitHub repository URL (e.g., `https://github.com/owner/repo`)
+
+## Connecting GitHub
+
+You can connect GitHub in two places:
+
+### During Onboarding
+
+When setting up your RipeText account, you'll be prompted to connect your support platform.
+
+1. Click the **Add** button next to the GitHub integration.
+2. Enter your public repository URL (e.g., `https://github.com/owner/repo` or `owner/repo`).
+3. Click **Connect**. RipeText will validate the repository is public and accessible.
+
+After connecting, RipeText will automatically kick off a historical import of your issues so insights are ready from the start.
+
+### From Settings
+
+Go to **Settings → Integrations** in your RipeText dashboard.
+
+1. Click **Connect** next to GitHub.
+2. Enter your repository URL and click **Connect & Analyze**.
+
+If this is the first time connecting GitHub, a historical import will run automatically.
+
+## What Gets Imported
+
+For each issue, RipeText imports:
+
+- **Issue body** — the full issue description as the opening message
+- **Comments** — all comments in the issue thread
+- **Metadata** — issue state (open/closed), labels, and author information
+- **People** — GitHub usernames linked to their profile avatars
+
+## What Happens After Connecting
+
+1. **Historical import** — RipeText imports your past issues. Depending on volume, this may take a few minutes to several hours.
+2. **Real-time sync** — New issues and comments are synced automatically via polling going forward.
+
+## Troubleshooting
+
+### Repository Not Found
+
+If validation fails:
+
+- Verify the repository URL is correct and the repository is public
+- Private repositories are not supported
+- Ensure the repository hasn't been renamed or deleted
+
+### Incomplete Import
+
+If some issues are missing after import:
+
+- Allow up to 30 minutes for the initial import to complete
+- Pull requests are excluded — only issues are imported
+- Check the integration status in **Settings → Integrations**

@@ -1,0 +1,142 @@
+---
+title: Signing requests
+description: Sign events and batch uploads with your HMAC signing secret.
+---
+
+[Sending an event](/docs/api/support/endpoints/send-event) and [uploading a batch](/docs/api/support/endpoints/upload-batch) carry an `X-RipeText-Signature` header as well as the access token. The signature proves the body came from you and hasn't been replayed. The other endpoints don't need one.
+
+The SDK signs every request it sends, so this page matters when you call the API directly.
+
+## The algorithm
+
+1. Take the current time as Unix **milliseconds**, e.g. `1700000000000`.
+2. Compute HMAC-SHA256 of `timestamp + "." + body`, where `body` is the exact bytes you send, using your **HMAC signing secret**, not the client secret.
+3. Hex-encode the digest and send `X-RipeText-Signature: t=<timestamp>,v1=<digest>`.
+
+Sign the bytes you actually send. Re-serializing the JSON afterwards, or letting a framework re-encode it, changes the signature and the request is refused.
+
+<CodeBlockTabs defaultValue="sdk">
+  <CodeBlockTabsList>
+    <CodeBlockTabsTrigger value="sdk">TypeScript SDK</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="js">JavaScript</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="http">HTTP</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="python">Python</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="python-sdk" disabled>
+      Python SDK (coming soon)
+    </CodeBlockTabsTrigger>
+  </CodeBlockTabsList>
+
+  <CodeBlockTab value="sdk">
+
+```ts
+// Nothing to do: the client signs events and batches with
+// RIPETEXT_SIGNING_SECRET on every call.
+await ripetext.support.sendEvent(event);
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="js">
+
+```js
+import { createHmac } from 'node:crypto';
+
+export function signedRequest(body, accessToken) {
+  const rawBody = JSON.stringify(body);
+  const timestamp = String(Date.now());
+  const digest = createHmac('sha256', process.env.RIPETEXT_SIGNING_SECRET)
+    .update(timestamp)
+    .update('.')
+    .update(rawBody)
+    .digest('hex');
+
+  return {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+      'X-RipeText-Signature': `t=${timestamp},v1=${digest}`
+    },
+    body: rawBody
+  };
+}
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="http">
+
+```http
+POST /v1/support/events HTTP/1.1
+Host: api.ripetext.com
+Authorization: Bearer <access_token>
+Content-Type: application/json
+X-RipeText-Signature: t=1700000000000,v1=<hex digest of "1700000000000." + body>
+
+{"id":"evt_8f2c1","type":"message.created","occurred_at":"2026-09-01T10:15:00Z","data":{"external_id":"ticket-1234"}}
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="python">
+
+```python
+import hashlib
+import hmac
+import json
+import os
+import time
+
+
+def signed_request(body, access_token):
+    raw_body = json.dumps(body, separators=(",", ":"))
+    timestamp = str(int(time.time() * 1000))
+    digest = hmac.new(
+        os.environ["RIPETEXT_SIGNING_SECRET"].encode(),
+        f"{timestamp}.{raw_body}".encode(),
+        hashlib.sha256,
+    ).hexdigest()
+
+    return {
+        "data": raw_body,
+        "headers": {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json",
+            "X-RipeText-Signature": f"t={timestamp},v1={digest}",
+        },
+    }
+```
+
+  </CodeBlockTab>
+</CodeBlockTabs>
+
+## Check your implementation
+
+With the secret `test-signing-secret`, timestamp `1700000000000` and body:
+
+```json
+{ "id": "evt_1", "type": "conversation.created" }
+```
+
+the digest must be:
+
+```
+faa4ea38762e303a0a4e7d7791bc1a8dcfc4d57f11fe8993f4686009e1dfcb88
+```
+
+If yours differs, the usual causes are signing a re-serialized body, using seconds instead of milliseconds, or using the client secret instead of the signing secret.
+
+## Freshness and replay
+
+- A signature is valid for **five minutes** either side of RipeText's clock. Outside that window the request is refused with `signature_expired`, which almost always means the sending server's clock has drifted.
+- The same signed request is accepted **once**. Sending those exact bytes again is refused with `replayed`.
+
+To send a request again after a failure, sign it again with a fresh timestamp and keep the same event `id`. RipeText matches conversations, messages and people by their IDs, so a repeat updates the same records instead of creating duplicates.
+
+## Failure codes
+
+| Code                | Meaning                                                       |
+| ------------------- | ------------------------------------------------------------- |
+| `missing_signature` | No `X-RipeText-Signature` header, or it isn't `t=…,v1=…`      |
+| `invalid_signature` | The digest doesn't match the body                             |
+| `signature_expired` | The timestamp is more than five minutes from RipeText's clock |
+| `replayed`          | These exact signed bytes were already accepted                |
+
+All four are rejections with status `401`, and each one appears under **Recent delivery attempts**.

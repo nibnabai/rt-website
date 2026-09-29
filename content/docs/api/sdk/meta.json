@@ -1,0 +1,10 @@
+{
+  "title": "SDK Reference",
+  "pages": [
+    "index",
+    "classes",
+    "interfaces",
+    "functions",
+    "variables"
+  ]
+}

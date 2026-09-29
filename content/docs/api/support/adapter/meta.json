@@ -1,0 +1,4 @@
+{
+  "title": "Support System Adapter",
+  "pages": ["index", "health", "list-conversations", "get-conversation"]
+}

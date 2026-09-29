@@ -1,0 +1,12 @@
+{
+  "title": "Integrations",
+  "pages": [
+    "crisp",
+    "front",
+    "github",
+    "hubspot",
+    "intercom",
+    "salesforce",
+    "zendesk"
+  ]
+}
