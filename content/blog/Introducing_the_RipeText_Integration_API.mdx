@@ -1,0 +1,74 @@
+---
+title: Introducing the RipeText Integration API
+description: >-
+  Connect any support system to RipeText, including the one you built yourself,
+  with a documented API, an official TypeScript SDK, and a delivery log that
+  tells you exactly what arrived.
+date: 2026-09-24
+author: RipeText Team
+tags:
+  - Integration
+  - API
+  - Developers
+  - Customer Support
+cover: >-
+  /images/blog/_uploads/511f3a71-61c7-4f8b-be68-86ebd9e0c040.png
+draft: false
+---
+
+Many of the support teams we talk to run at least one system nobody else has. A helpdesk built in-house eight years ago. A ticketing tool that came with an acquisition and never left. A queue that lives in a database and a handful of cron jobs. It holds real conversations with real customers, and it sits outside every analytics tool on the market because no vendor is going to build a connector for your one-off system.
+
+Until now that meant those conversations stayed dark. RipeText read your Zendesk and your Intercom, and the rest of your support surface went unanalyzed.
+
+The Integration API closes that gap. If your system can make an HTTPS request, it can send conversations to RipeText.
+
+## What it does
+
+You send conversations, RipeText analyzes them. Nothing else about your account changes: whatever arrives through the API goes through the same pipeline as your Zendesk or Intercom conversations and lands on the same dashboards, grouped and measured beside them. The only new part is where the conversations come from.
+
+There are two directions of traffic, and you choose how many you use.
+
+**You send to us.** Your code posts a conversation whenever one is created or changes. That is the whole requirement. Systems behind a firewall, on-premise installs, and internal tools that accept no inbound connections all work this way.
+
+**We fetch from you.** If you run a small service we can reach, called an adapter, RipeText imports your history through it and fetches a conversation whenever you send us only its ID. It is three read-only endpoints and nothing else.
+
+## Built for the developer who has to wire it up
+
+The API is documented endpoint by endpoint, with examples in raw HTTP, JavaScript, Python, and TypeScript.
+
+For Node projects there is an official SDK:
+
+```bash
+npm install @ripetext/api-sdk
+```
+
+It handles access tokens, refreshes them when they expire, and signs every request. Sending a conversation is one call:
+
+```ts
+import { RipeTextClient } from '@ripetext/api-sdk';
+
+const ripetext = new RipeTextClient();
+
+await ripetext.support.sendEvent({
+  id: 'evt_8f2c1',
+  type: 'message.created',
+  occurred_at: new Date().toISOString(),
+  data: conversation
+});
+```
+
+Payloads are checked against the contract before they leave your process, so a malformed conversation fails in your code with the field named, rather than as a mystery error hours later.
+
+Everything you send is listed under **Settings > Integrations > Manage**, accepted or rejected, with the reason. No silent drops, and no guessing which payload our side disliked.
+
+Security is not an afterthought either. Access tokens are OAuth 2.0 client credentials, every conversation you send is signed with HMAC-SHA256 over the exact bytes, signatures expire after five minutes, and replays are rejected. Requests we make to your adapter are signed the same way, so your side can verify that traffic really came from us. Credentials can be restricted to your own IP addresses, rotated, or revoked without downtime.
+
+## How to start
+
+The Integration API is enabled per account. Contact support and we will turn it on for your organization, then connect it under **Settings > Integrations**, where you name the system and get your credentials.
+
+The [Integration API documentation](/docs/api) covers setup, authentication, signing, every endpoint, the adapter contract, and the SDK reference.
+
+If you're new here and want to see what your conversations can tell you:
+
+[**Book a demo ->**](https://calendly.com/tsenkov)

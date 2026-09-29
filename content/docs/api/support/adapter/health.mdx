@@ -1,0 +1,159 @@
+---
+title: Health
+description: The endpoint RipeText calls before saving your adapter address, GET /ripetext/v1/health.
+---
+
+RipeText calls this before saving an adapter address, and refuses the address unless it answers correctly.
+
+```
+GET {your base URL}/ripetext/v1/health
+```
+
+## Request
+
+No query parameters, no body. The request carries `X-RipeText-Signature`, and the gateway credentials you configured, if any. Verify it like any other call, see [verifying a request](/docs/api/support/adapter#verifying-that-a-request-comes-from-ripetext).
+
+## Response
+
+`200 OK`:
+
+```json
+{
+  "status": "ok",
+  "version": "1",
+  "domains": {
+    "support": {
+      "resources": ["conversations"],
+      "capabilities": ["historical", "events"]
+    }
+  }
+}
+```
+
+| Field                   | Type   | Required | Description                                                                    |
+| ----------------------- | ------ | -------- | ------------------------------------------------------------------------------ |
+| `status`                | string | yes      | `ok` when the adapter is ready                                                 |
+| `version`               | string | yes      | The contract version you implement: `1`                                        |
+| `domains.support`       | object | yes      | Must be present; an adapter without it is refused                              |
+| `…support.resources`    | array  | yes      | What you serve. `conversations` today.                                         |
+| `…support.capabilities` | array  | yes      | `historical` if you serve the list endpoint, `events` if you serve fetch-by-ID |
+
+Domains other than `support` are ignored, so you can add your own without breaking anything.
+
+## Implementing it
+
+<CodeBlockTabs defaultValue="sdk">
+  <CodeBlockTabsList>
+    <CodeBlockTabsTrigger value="sdk">TypeScript SDK</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="js">JavaScript</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="http">HTTP</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="python">Python</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="python-sdk" disabled>
+      Python SDK (coming soon)
+    </CodeBlockTabsTrigger>
+  </CodeBlockTabsList>
+
+  <CodeBlockTab value="sdk">
+
+```ts
+import { verifyRipeTextRequest } from '@ripetext/api-sdk';
+
+// Express, but any framework works the same way
+app.get('/ripetext/v1/health', (req, res) => {
+  const trusted = verifyRipeTextRequest({
+    header: req.headers['x-ripetext-signature'],
+    method: req.method,
+    path: req.originalUrl
+  });
+  if (!trusted) return res.status(401).end();
+
+  res.json({
+    status: 'ok',
+    version: '1',
+    domains: {
+      support: {
+        resources: ['conversations'],
+        capabilities: ['historical', 'events']
+      }
+    }
+  });
+});
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="js">
+
+```js
+// verify() is the hand-written check from Building an adapter
+app.get('/ripetext/v1/health', (req, res) => {
+  if (
+    !verify(req.headers['x-ripetext-signature'], req.method, req.originalUrl)
+  ) {
+    return res.status(401).end();
+  }
+
+  res.json({
+    status: 'ok',
+    version: '1',
+    domains: {
+      support: {
+        resources: ['conversations'],
+        capabilities: ['historical', 'events']
+      }
+    }
+  });
+});
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="http">
+
+What RipeText sends, and what it expects back:
+
+```http
+GET /ripetext/v1/health HTTP/1.1
+Host: adapter.example.com
+Accept: application/json
+X-RipeText-Signature: t=1700000000000,v1=<hex digest>
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"status":"ok","version":"1","domains":{"support":{"resources":["conversations"],"capabilities":["historical","events"]}}}
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="python">
+
+```python
+# verify() is the hand-written check from Building an adapter
+@app.get("/ripetext/v1/health")
+def health():
+    # Flask, but any framework works the same way. full_path always ends in
+    # "?", which RipeText did not sign, so strip it when there is no query.
+    path = request.full_path.rstrip("?") if not request.query_string else request.full_path
+    if not verify(request.headers.get("X-RipeText-Signature"), request.method, path):
+        return "", 401
+
+    return {
+        "status": "ok",
+        "version": "1",
+        "domains": {
+            "support": {
+                "resources": ["conversations"],
+                "capabilities": ["historical", "events"],
+            }
+        },
+    }
+```
+
+  </CodeBlockTab>
+</CodeBlockTabs>
+
+## What RipeText does with the answer
+
+- **Anything but `200`**: the address is refused. A `401` or `403` is reported as your adapter rejecting RipeText's authentication.
+- **Missing `support` entry**: refused, with "Adapter health must declare the support domain".
+- **Unparseable body**: refused, with "Adapter health response did not match the v1 contract".
+
+The check runs whenever the address or its authentication is saved, so a broken deploy is caught the moment you try to register it, not at import time.

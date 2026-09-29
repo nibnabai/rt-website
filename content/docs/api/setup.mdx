@@ -1,0 +1,44 @@
+---
+title: Setup
+description: Turn on API access, store your credentials, and register your adapter.
+---
+
+Setting up takes three steps in the RipeText app. You end up with four secrets and, optionally, a registered [support adapter](/docs/api/support/adapter).
+
+## 1. Connect
+
+Choose **Integration API** when onboarding asks you to connect your support platform, or go to **Settings → Integrations** and click **Connect** next to Integration API.
+
+Enter an **integration slug**, a short name for the system you're connecting, such as `legacy-ticketing`. Letters, numbers and hyphens only. Use a different slug for each system, so their conversations stay apart and each gets its own credentials.
+
+## 2. Store your credentials
+
+RipeText shows four values **once**. Store them in your secret manager under these names, which the SDK reads automatically:
+
+| Value                  | Environment variable              | Used for                                                                                                     |
+| ---------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Client ID              | `RIPETEXT_CLIENT_ID`              | Identifying your integration                                                                                 |
+| Client secret          | `RIPETEXT_CLIENT_SECRET`          | [Getting access tokens](/docs/api/authentication)                                                            |
+| HMAC signing secret    | `RIPETEXT_SIGNING_SECRET`         | [Signing what you send](/docs/api/signing)                                                                   |
+| Adapter signing secret | `RIPETEXT_ADAPTER_SIGNING_SECRET` | [Verifying requests to your adapter](/docs/api/support/adapter#verifying-that-a-request-comes-from-ripetext) |
+
+If you lose them, generate new ones under **Settings → Integrations → Manage**. The old ones stop working when you rotate, so deploy the new values first, see [rotating without downtime](/docs/api/support/reference/delivery-outcomes#rotating-credentials-without-downtime).
+
+## 3. Register your support adapter (optional)
+
+If RipeText should pull history from your systems, enter your adapter's HTTPS address, such as `https://adapter.example.com`, and how RipeText authenticates to it.
+
+Deploy the adapter with its signing secret **first**: RipeText calls your [health endpoint](/docs/api/support/adapter/health) with a signed request before saving the address, and refuses the address if that call fails.
+
+Your history is imported when setup finishes, or straight away if you register the adapter later from **Settings → Integrations → Manage**.
+
+Click **Skip** if you won't run an adapter. You can add one at any time under **Manage**, and [upload your history](/docs/api/support/endpoints/upload-batch) in the meantime.
+
+## Managing an integration afterwards
+
+Everything lives under **Settings → Integrations → Manage**:
+
+- **Credentials**: generate an additional credential, restrict one to a set of IP addresses, rotate it, or revoke it. An integration can hold several active credentials at once.
+- **Adapter signing secret**: rotate the secret RipeText signs its adapter requests with. For 24 hours both the new and the previous secret are sent, so you have a day to deploy.
+- **Adapter connection**: change the address or the authentication. Saving re-runs the health check with the new settings.
+- **Recent delivery attempts**: everything you've sent, accepted or rejected, with the reason. See [delivery outcomes](/docs/api/support/reference/delivery-outcomes).

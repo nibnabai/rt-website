@@ -1,0 +1,16 @@
+---
+title: "RipeTextClientOptions"
+---
+
+Each option falls back to an environment variable, so a client configured
+through the environment needs no options at all.
+
+## Properties
+
+| Property | Type | Description |
+| ------ | ------ | ------ |
+| <a id="property-baseurl"></a> `baseUrl?` | `string` | Defaults to `RIPETEXT_BASE_URL`, then `https://api.ripetext.com`. |
+| <a id="property-clientid"></a> `clientId?` | `string` | Defaults to `RIPETEXT_CLIENT_ID`. |
+| <a id="property-clientsecret"></a> `clientSecret?` | `string` | Defaults to `RIPETEXT_CLIENT_SECRET`. |
+| <a id="property-fetch"></a> `fetch?` | (`input`, `init?`) => `Promise`\<`Response`\> | The `fetch` implementation to send requests with. Defaults to the global `fetch`. |
+| <a id="property-signingsecret"></a> `signingSecret?` | `string` | Defaults to `RIPETEXT_SIGNING_SECRET`. |

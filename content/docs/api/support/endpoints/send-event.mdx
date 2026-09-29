@@ -1,0 +1,241 @@
+---
+title: Send an event
+description: Tell RipeText a conversation was created or changed, with POST /v1/support/events.
+---
+
+Send one event whenever a conversation changes. This is how live updates reach RipeText.
+
+```
+POST https://api.ripetext.com/v1/support/events
+```
+
+- **Scope:** `support:ingest`
+- **Signature:** required, see [signing requests](/docs/api/signing)
+- **Rate limit:** 120 requests per minute per integration
+
+## Request
+
+| Field         | Type   | Required | Description                                                                                    |
+| ------------- | ------ | -------- | ---------------------------------------------------------------------------------------------- |
+| `id`          | string | yes      | Your stable ID for this event. Reuse it when you send the same event again.                    |
+| `type`        | string | yes      | One of the [event types](/docs/api/support/reference/conversation-format#event-types)          |
+| `occurred_at` | string | yes      | ISO 8601 timestamp of when the change happened                                                 |
+| `data`        | object | yes      | The [conversation](/docs/api/support/reference/conversation-format), or just its `external_id` |
+
+`data` takes one of two forms:
+
+- **The full conversation**: every field and all its messages. Works without an adapter.
+- **A reference**: `{ "external_id": "ticket-1234" }`. RipeText fetches the current conversation from your [adapter](/docs/api/support/adapter/get-conversation), so this form needs a registered adapter.
+
+<CodeBlockTabs defaultValue="sdk">
+  <CodeBlockTabsList>
+    <CodeBlockTabsTrigger value="sdk">TypeScript SDK</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="js">JavaScript</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="http">HTTP</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="python">Python</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="python-sdk" disabled>
+      Python SDK (coming soon)
+    </CodeBlockTabsTrigger>
+  </CodeBlockTabsList>
+
+  <CodeBlockTab value="sdk">
+
+```ts
+import { RipeTextClient } from '@ripetext/api-sdk';
+
+const ripetext = new RipeTextClient();
+
+await ripetext.support.sendEvent({
+  id: 'evt_8f2c1',
+  type: 'message.created',
+  occurred_at: new Date().toISOString(),
+  data: {
+    external_id: 'ticket-1234',
+    subject: 'Refund not received',
+    status: 'open',
+    created_at: '2026-09-01T09:02:00Z',
+    requester: { external_id: 'cust-77', name: 'Dana Lee', role: 'customer' },
+    messages: [
+      {
+        external_id: 'msg-1',
+        body: "I still haven't received my refund.",
+        author: { external_id: 'cust-77', role: 'customer' },
+        created_at: '2026-09-01T09:02:00Z'
+      }
+    ]
+  }
+});
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="js">
+
+```js
+import { createHmac } from 'node:crypto';
+
+const event = {
+  id: 'evt_8f2c1',
+  type: 'message.created',
+  occurred_at: new Date().toISOString(),
+  data: {
+    external_id: 'ticket-1234',
+    subject: 'Refund not received',
+    status: 'open',
+    created_at: '2026-09-01T09:02:00Z',
+    requester: { external_id: 'cust-77', name: 'Dana Lee', role: 'customer' },
+    messages: [
+      {
+        external_id: 'msg-1',
+        body: "I still haven't received my refund.",
+        author: { external_id: 'cust-77', role: 'customer' },
+        created_at: '2026-09-01T09:02:00Z'
+      }
+    ]
+  }
+};
+
+const rawBody = JSON.stringify(event);
+const timestamp = String(Date.now());
+const digest = createHmac('sha256', process.env.RIPETEXT_SIGNING_SECRET)
+  .update(timestamp)
+  .update('.')
+  .update(rawBody)
+  .digest('hex');
+
+const response = await fetch('https://api.ripetext.com/v1/support/events', {
+  method: 'POST',
+  headers: {
+    Authorization: `Bearer ${accessToken}`,
+    'Content-Type': 'application/json',
+    'X-RipeText-Signature': `t=${timestamp},v1=${digest}`
+  },
+  body: rawBody
+});
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="http">
+
+```http
+POST /v1/support/events HTTP/1.1
+Host: api.ripetext.com
+Authorization: Bearer <access_token>
+Content-Type: application/json
+X-RipeText-Signature: t=1700000000000,v1=faa4ea38762e303a...
+
+{
+  "id": "evt_8f2c1",
+  "type": "message.created",
+  "occurred_at": "2026-09-01T10:15:00Z",
+  "data": {
+    "external_id": "ticket-1234",
+    "subject": "Refund not received",
+    "status": "open",
+    "created_at": "2026-09-01T09:02:00Z",
+    "requester": {
+      "external_id": "cust-77",
+      "name": "Dana Lee",
+      "role": "customer"
+    },
+    "messages": [
+      {
+        "external_id": "msg-1",
+        "body": "I still haven't received my refund.",
+        "author": { "external_id": "cust-77", "role": "customer" },
+        "created_at": "2026-09-01T09:02:00Z"
+      }
+    ]
+  }
+}
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="python">
+
+```python
+import hashlib
+import hmac
+import json
+import os
+import time
+
+import requests
+
+event = {
+    "id": "evt_8f2c1",
+    "type": "message.created",
+    "occurred_at": "2026-09-01T10:15:00Z",
+    "data": {
+        "external_id": "ticket-1234",
+        "subject": "Refund not received",
+        "status": "open",
+        "created_at": "2026-09-01T09:02:00Z",
+        "requester": {
+            "external_id": "cust-77",
+            "name": "Dana Lee",
+            "role": "customer",
+        },
+        "messages": [
+            {
+                "external_id": "msg-1",
+                "body": "I still haven't received my refund.",
+                "author": {"external_id": "cust-77", "role": "customer"},
+                "created_at": "2026-09-01T09:02:00Z",
+            }
+        ],
+    },
+}
+
+raw_body = json.dumps(event, separators=(",", ":"))
+timestamp = str(int(time.time() * 1000))
+digest = hmac.new(
+    os.environ["RIPETEXT_SIGNING_SECRET"].encode(),
+    f"{timestamp}.{raw_body}".encode(),
+    hashlib.sha256,
+).hexdigest()
+
+response = requests.post(
+    "https://api.ripetext.com/v1/support/events",
+    data=raw_body,
+    headers={
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+        "X-RipeText-Signature": f"t={timestamp},v1={digest}",
+    },
+    timeout=30,
+)
+```
+
+  </CodeBlockTab>
+</CodeBlockTabs>
+
+## Response
+
+`202 Accepted`:
+
+```json
+{
+  "accepted": true,
+  "workflow_id": "webhook-ingestion-<org>-integrationapi-<slug>-evt_8f2c1"
+}
+```
+
+`202` means the event was received and passed its checks, not that the conversation is stored. Anything that fails afterwards, such as an unknown conversation or an unreachable adapter, appears as a second entry for the same event ID under **Recent delivery attempts**. See [delivery outcomes](/docs/api/support/reference/delivery-outcomes).
+
+## Errors
+
+| Status | Code                                                                      | Meaning                                                        |
+| ------ | ------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `400`  | `schema_violation`                                                        | The event doesn't match the format; `details` lists the fields |
+| `401`  | `unauthorized`, `token_revoked`                                           | The access token expired or its credential was revoked         |
+| `401`  | `missing_signature`, `invalid_signature`, `signature_expired`, `replayed` | See [signing](/docs/api/signing)                               |
+| `403`  | `insufficient_scope`                                                      | The credential lacks `support:ingest`                          |
+| `403`  | `ip_forbidden`                                                            | The request came from outside the credential's IP allowlist    |
+| `413`  | `payload_too_large`                                                       | The body is over 5 MB                                          |
+| `429`  | `rate_limited`                                                            | More than 120 events in a minute for this integration          |
+
+## Notes
+
+- **Retrying is safe.** Reuse the same event `id`, sign again with a fresh timestamp. Records are matched by ID, so a repeat updates rather than duplicates.
+- **IDs are scoped to the integration.** Two systems that both use `ticket-1234` never collide.
+- **Order doesn't matter.** An event for a conversation RipeText hasn't seen creates it.

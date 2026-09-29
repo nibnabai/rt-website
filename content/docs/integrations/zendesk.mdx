@@ -1,0 +1,53 @@
+---
+title: Zendesk
+description: Import Zendesk tickets into RipeText for AI-powered support analytics.
+---
+
+Connect Zendesk to RipeText to import tickets and analyze your support team's performance.
+
+## Overview
+
+The Zendesk integration lets you:
+
+- Import ticket history from your Zendesk instance
+- Receive real-time ticket updates via webhooks
+- Analyze ticket topics, resolution times, and agent performance
+
+## Prerequisites
+
+- Admin access to your Zendesk instance
+
+## Connecting Zendesk
+
+You can connect Zendesk in two places:
+
+### During Onboarding
+
+When setting up your RipeText account, you'll be prompted to connect your support platform. Enter your Zendesk subdomain (e.g., `yourcompany` for `yourcompany.zendesk.com`), authorize access, and RipeText will automatically kick off a historical import of your tickets so insights are ready from the start.
+
+### From Settings
+
+Go to **Settings → Integrations** in your RipeText dashboard and click **Connect** next to Zendesk. Enter your subdomain, then authorize via the OAuth consent screen. If this is the first time connecting Zendesk, a historical import will run automatically.
+
+## What Happens After Connecting
+
+1. **Historical import** — RipeText imports your past tickets. Depending on volume, this may take a few minutes to several hours.
+2. **Real-time sync** — New tickets and updates are synced automatically via webhooks going forward.
+
+## Troubleshooting
+
+### Authorization Failed
+
+If the OAuth flow fails:
+
+- Verify you have admin access to Zendesk
+- Ensure your Zendesk plan includes API access
+- Check that OAuth applications are enabled in Zendesk admin settings
+
+### Incomplete Import
+
+If some tickets are missing after import:
+
+- Archived or deleted tickets may not be available via the API
+- Allow up to 30 minutes for the initial import to complete
+- Check the integration status in **Settings → Integrations**

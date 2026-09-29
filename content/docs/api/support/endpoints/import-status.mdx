@@ -1,0 +1,125 @@
+---
+title: Check an import
+description: See whether a history import is running, finished or failed, with GET /v1/support/backfill/{id}.
+---
+
+Check what happened to an import you [started](/docs/api/support/endpoints/start-import).
+
+```
+GET https://api.ripetext.com/v1/support/backfill/{id}
+```
+
+- **Scope:** `support:backfill`
+- **Signature:** not required
+- **Rate limit:** none beyond the token endpoint's
+
+## Request
+
+| Parameter | In   | Required | Description                                   |
+| --------- | ---- | -------- | --------------------------------------------- |
+| `id`      | path | yes      | The `id` returned when the import was started |
+
+<CodeBlockTabs defaultValue="sdk">
+  <CodeBlockTabsList>
+    <CodeBlockTabsTrigger value="sdk">TypeScript SDK</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="js">JavaScript</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="http">HTTP</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="python">Python</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="python-sdk" disabled>
+      Python SDK (coming soon)
+    </CodeBlockTabsTrigger>
+  </CodeBlockTabsList>
+
+  <CodeBlockTab value="sdk">
+
+```ts
+const { status, error } = await ripetext.support.getBackfill(id);
+
+if (status === 'FAILED') {
+  console.error('import failed:', error);
+}
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="js">
+
+```js
+const response = await fetch(
+  `https://api.ripetext.com/v1/support/backfill/${encodeURIComponent(id)}`,
+  { headers: { Authorization: `Bearer ${accessToken}` } }
+);
+
+const { status, error } = await response.json();
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="http">
+
+```http
+GET /v1/support/backfill/historical-ingestion-org-integrationapi-slug-2942541e HTTP/1.1
+Host: api.ripetext.com
+Authorization: Bearer <access_token>
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="python">
+
+```python
+import urllib.parse
+
+import requests
+
+response = requests.get(
+    "https://api.ripetext.com/v1/support/backfill/"
+    + urllib.parse.quote(backfill_id, safe=""),
+    headers={"Authorization": f"Bearer {access_token}"},
+    timeout=30,
+)
+
+body = response.json()
+status = body["status"]
+error = body.get("error")
+```
+
+  </CodeBlockTab>
+</CodeBlockTabs>
+
+## Response
+
+```json
+{
+  "id": "historical-ingestion-<org>-integrationapi-<slug>-2942541e",
+  "status": "COMPLETED"
+}
+```
+
+A failed import also carries the reason:
+
+```json
+{
+  "id": "historical-ingestion-<org>-integrationapi-<slug>-2942541e",
+  "status": "FAILED",
+  "error": "Couldn't reach your adapter at https://adapter.example.com"
+}
+```
+
+| `status`                              | Meaning                                                            |
+| ------------------------------------- | ------------------------------------------------------------------ |
+| `RUNNING`                             | Still importing. Poll every few seconds; large imports take hours. |
+| `COMPLETED`                           | Finished. Everything your adapter returned has been imported.      |
+| `FAILED`                              | Stopped. `error` says why, most often an unreachable adapter.      |
+| `TERMINATED`, `CANCELED`, `TIMED_OUT` | Stopped by RipeText. Contact support if you see one of these.      |
+
+## Errors
+
+| Status | Code                            | Meaning                                                                        |
+| ------ | ------------------------------- | ------------------------------------------------------------------------------ |
+| `400`  | `invalid_request`               | No ID in the path                                                              |
+| `401`  | `unauthorized`, `token_revoked` | The access token expired or its credential was revoked                         |
+| `403`  | `insufficient_scope`            | The credential lacks `support:backfill`                                        |
+| `404`  | `not_found`                     | No such import for this integration, or the ID belongs to another organization |
+
+## Notes
+
+- **Poll, don't wait.** The call returns immediately; there's no long-polling.
+- **A failed import can be started again** once you've fixed the cause. Nothing already imported is lost.
