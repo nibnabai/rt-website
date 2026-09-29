@@ -14,6 +14,11 @@ const MIME: Record<string, string> = {
 };
 
 export async function POST(req: Request) {
+  // Uploads come from the local blog editor only, never from the live site.
+  if (process.env.NODE_ENV !== 'development') {
+    return NextResponse.json({ error: 'Not Found' }, { status: 404 });
+  }
+
   const form = await req.formData();
   const file = form.get('file') as File | null;
   const slug = form.get('slug') as string | null;
