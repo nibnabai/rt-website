@@ -1,0 +1,86 @@
+---
+title: "RipeTextApiError"
+---
+
+A request the RipeText API refused. `code` is the API's machine-readable
+reason (e.g. `invalid_signature`, `schema_violation`, `rate_limited`), the
+same code shown under Recent delivery attempts.
+
+## Extends
+
+- `Error`
+
+## Constructors
+
+### Constructor
+
+```ts
+new RipeTextApiError(
+   operation, 
+   status, 
+   code, 
+   message, 
+   details?
+): RipeTextApiError;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `operation` | `string` |
+| `status` | `number` |
+| `code` | `string` |
+| `message` | `string` |
+| `details?` | `unknown` |
+
+#### Returns
+
+`RipeTextApiError`
+
+#### Overrides
+
+```ts
+Error.constructor
+```
+
+## Properties
+
+| Property | Modifier | Type | Description | Inherited from |
+| ------ | ------ | ------ | ------ | ------ |
+| <a id="property-cause"></a> `cause?` | `public` | `unknown` | - | `Error.cause` |
+| <a id="property-code"></a> `code` | `readonly` | `string` | - | - |
+| <a id="property-details"></a> `details?` | `readonly` | `unknown` | - | - |
+| <a id="property-message"></a> `message` | `public` | `string` | - | `Error.message` |
+| <a id="property-name"></a> `name` | `public` | `string` | - | `Error.name` |
+| <a id="property-stack"></a> `stack?` | `public` | `string` | - | `Error.stack` |
+| <a id="property-status"></a> `status` | `readonly` | `number` | - | - |
+| <a id="property-preparestacktrace"></a> `prepareStackTrace?` | `static` | (`err`, `stackTraces`) => `any` | Optional override for formatting stack traces **See** https://v8.dev/docs/stack-trace-api#customizing-stack-traces | `Error.prepareStackTrace` |
+| <a id="property-stacktracelimit"></a> `stackTraceLimit` | `static` | `number` | - | `Error.stackTraceLimit` |
+
+## Methods
+
+### captureStackTrace()
+
+```ts
+static captureStackTrace(targetObject, constructorOpt?): void;
+```
+
+Create .stack property on a target object
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `targetObject` | `object` |
+| `constructorOpt?` | `Function` |
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+```ts
+Error.captureStackTrace
+```

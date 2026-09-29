@@ -1,0 +1,30 @@
+---
+title: "RipeTextClient"
+---
+
+The client for the RipeText API. It fetches and refreshes access tokens and
+signs every request that needs a signature.
+
+## Constructors
+
+### Constructor
+
+```ts
+new RipeTextClient(options?): RipeTextClient;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `options` | [`RipeTextClientOptions`](/docs/api/sdk/interfaces/RipeTextClientOptions) |
+
+#### Returns
+
+`RipeTextClient`
+
+## Properties
+
+| Property | Modifier | Type | Description |
+| ------ | ------ | ------ | ------ |
+| <a id="property-support"></a> `support` | `readonly` | [`SupportResource`](/docs/api/sdk/interfaces/SupportResource) | The support endpoints. |

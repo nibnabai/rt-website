@@ -1,0 +1,42 @@
+---
+title: "createSignatureHeader()"
+---
+
+```ts
+function createSignatureHeader(
+   secret, 
+   rawBody, 
+   timestamp?
+): {
+  digest: string;
+  header: string;
+  timestamp: string;
+};
+```
+
+Signs a request body you send to RipeText and returns the
+`X-RipeText-Signature` header value, `t=<timestamp>,v1=<digest>`.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `secret` | `string` |
+| `rawBody` | `string` \| `Buffer` |
+| `timestamp` | `string` |
+
+## Returns
+
+```ts
+{
+  digest: string;
+  header: string;
+  timestamp: string;
+}
+```
+
+| Name | Type |
+| ------ | ------ |
+| `digest` | `string` |
+| `header` | `string` |
+| `timestamp` | `string` |

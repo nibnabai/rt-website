@@ -1,0 +1,52 @@
+---
+title: RipeText Now Connects to Salesforce
+description: >-
+  Pull your Salesforce Service Cloud cases, emails, and comments into RipeText
+  for AI-powered topic clustering, sentiment tracking, and trend detection.
+date: 2026-08-28
+author: RipeText Team
+tags:
+  - Integration
+  - Salesforce
+  - Customer Support
+cover: /images/blog/salesforce-integration-cover.png
+draft: false
+---
+
+Salesforce will tell you everything about your case volume except the one thing you actually want to know. How many cases came in. How long they stayed open. Who closed the most. What it won't tell you is what those cases were _about_ - not in any way you can act on before the quarter ends.
+
+The usual workaround is a report, then an export, then somebody's afternoon spent reading threads and tagging them by hand. That holds up at fifty cases a month. At five hundred it quietly stops happening, and the tagging that does get done is too coarse to be worth much.
+
+RipeText now connects to Salesforce Service Cloud and reads the cases themselves - the full thread, not the metadata.
+
+## What the integration does
+
+RipeText pulls in your existing case history, then keeps up with new activity as it happens. For each case it reads the whole conversation: the case record, email messages on it, case comments including internal ones, and Chatter feed activity. It resolves the people involved too, matching each case to its contact, its account, and the agent who owns it.
+
+Resolution status comes from Salesforce's own closed flag rather than the status label, so however your org has renamed its stages, RipeText reads them correctly without configuration.
+
+All of it feeds the same analysis pipeline already running for Zendesk, Intercom, HubSpot, Front, and Crisp customers.
+
+## What you get
+
+- **Topic clustering.** Cases group themselves by what they're actually about. The spike in billing confusion shows up on your dashboard the week it starts, not in next quarter's review.
+- **Sentiment tracking.** Every case carries a tone. RipeText tracks it across your volume so you see frustration building before it lands in your CSAT numbers.
+- **Trend detection.** An issue appears in six cases on Monday and thirty by Thursday. RipeText flags the shape of that curve early, while it's still cheap to fix.
+- **One dashboard for everything.** If support lives in Salesforce but parts of your team are on Intercom or Zendesk, you stop checking three tools to answer one question.
+
+## How it works
+
+Salesforce takes two steps rather than one click, because RipeText installs as a managed package in your own org before it reads anything.
+
+1. **Install.** A Salesforce admin adds the RipeText package to your org. The install link opens in a new tab.
+2. **Authorize.** Come back and approve access. RipeText asks only for read access to your cases and the ability to keep the connection alive.
+
+From there the historical import runs on Salesforce's Bulk API, which draws on a separate allocation from the daily API limits your other integrations compete over. Live updates arrive over Salesforce's event stream - no polling, no scheduled exports, and no load on your REST allocation.
+
+## Get started
+
+If you're already using RipeText, head to **Settings > Integrations** and connect Salesforce. Have your Salesforce admin nearby for the install step.
+
+If you're new here and want to see what your case data can tell you:
+
+[**Book a demo ->**](https://calendly.com/tsenkov)

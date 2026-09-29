@@ -1,0 +1,122 @@
+---
+title: Start an import
+description: Ask RipeText to import history from your adapter, with POST /v1/support/backfill.
+---
+
+Ask RipeText to walk your [adapter's conversation list](/docs/api/support/adapter/list-conversations) and import what it finds.
+
+```
+POST https://api.ripetext.com/v1/support/backfill
+```
+
+- **Scope:** `support:backfill`
+- **Signature:** not required
+- **Rate limit:** 5 requests per minute per integration
+- **Needs an adapter.** Without one there is nothing to pull from; [upload a batch](/docs/api/support/endpoints/upload-batch) instead.
+
+An import already runs automatically the first time you register an adapter, so you need this endpoint to import again later: after a gap in your data, or after changing what your adapter returns.
+
+## Request
+
+The body is optional. Send `{}` or nothing at all to accept the defaults.
+
+| Field           | Type    | Required | Description                                                       |
+| --------------- | ------- | -------- | ----------------------------------------------------------------- |
+| `lookback_days` | integer | no       | How far back to import, 1 to 365. Defaults to 90.                 |
+| `max_tickets`   | integer | no       | Stop after this many conversations, 1 to 10000. Defaults to 1000. |
+
+<CodeBlockTabs defaultValue="sdk">
+  <CodeBlockTabsList>
+    <CodeBlockTabsTrigger value="sdk">TypeScript SDK</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="js">JavaScript</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="http">HTTP</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="python">Python</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="python-sdk" disabled>
+      Python SDK (coming soon)
+    </CodeBlockTabsTrigger>
+  </CodeBlockTabsList>
+
+  <CodeBlockTab value="sdk">
+
+```ts
+const { id } = await ripetext.support.startBackfill({ lookback_days: 90 });
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="js">
+
+```js
+const response = await fetch('https://api.ripetext.com/v1/support/backfill', {
+  method: 'POST',
+  headers: {
+    Authorization: `Bearer ${accessToken}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ lookback_days: 90 })
+});
+
+const { id } = await response.json();
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="http">
+
+```http
+POST /v1/support/backfill HTTP/1.1
+Host: api.ripetext.com
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "lookback_days": 90,
+  "max_tickets": 5000
+}
+```
+
+  </CodeBlockTab>
+  <CodeBlockTab value="python">
+
+```python
+import requests
+
+response = requests.post(
+    "https://api.ripetext.com/v1/support/backfill",
+    json={"lookback_days": 90},
+    headers={"Authorization": f"Bearer {access_token}"},
+    timeout=30,
+)
+
+backfill_id = response.json()["id"]
+```
+
+  </CodeBlockTab>
+</CodeBlockTabs>
+
+## Response
+
+`202 Accepted`:
+
+```json
+{
+  "id": "historical-ingestion-<org>-integrationapi-<slug>-2942541e-5d7c-48e1"
+}
+```
+
+Keep the `id` and [check its status](/docs/api/support/endpoints/import-status). Starting an import doesn't wait for it: a large history can take several hours.
+
+## Errors
+
+| Status | Code                            | Meaning                                                     |
+| ------ | ------------------------------- | ----------------------------------------------------------- |
+| `400`  | `schema_violation`              | `lookback_days` or `max_tickets` is outside its range       |
+| `401`  | `unauthorized`, `token_revoked` | The access token expired or its credential was revoked      |
+| `403`  | `insufficient_scope`            | The credential lacks `support:backfill`                     |
+| `403`  | `ip_forbidden`                  | The request came from outside the credential's IP allowlist |
+| `429`  | `rate_limited`                  | More than 5 imports started in a minute                     |
+
+An import that can't reach your adapter still starts: it's reported as `FAILED` by the [status endpoint](/docs/api/support/endpoints/import-status), not as an error here.
+
+## Notes
+
+- **Running twice is safe.** Conversations are matched by `external_id`, so a second import updates rather than duplicates.
+- **Your adapter sets the pace.** RipeText requests one page at a time, following `next_cursor` until your adapter stops returning one.

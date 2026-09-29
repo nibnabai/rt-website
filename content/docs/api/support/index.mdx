@@ -1,0 +1,28 @@
+---
+title: Overview
+description: Connect a support system RipeText doesn't integrate with natively by sending your conversations through the API.
+---
+
+The Integration API connects any support system to RipeText: an in-house helpdesk, a legacy ticketing tool, or a platform we don't integrate with yet. Unlike the other integrations, it's set up by a developer: RipeText defines the data format, and your code sends your conversations in that format.
+
+## What it gives you
+
+- Conversations in RipeText in real time, as they're created and updated
+- History imported from a small service you host, called an **adapter**
+- History uploaded in batches instead, if your systems can't accept inbound connections
+- Several systems on the same RipeText account, each with its own credentials
+
+## How it works
+
+There are two directions of traffic. You need the first; the second is optional.
+
+1. **You send to RipeText.** Whenever a conversation changes, your code sends it to [`POST /v1/support/events`](/docs/api/support/endpoints/send-event). This is how live updates arrive.
+2. **RipeText calls your adapter.** If you run an [adapter](/docs/api/support/adapter), RipeText uses it to import your history, and to fetch a conversation when you send only its ID.
+
+If your systems sit behind a firewall, skip the adapter: send full conversations, and upload your history with [`POST /v1/support/conversations/batch`](/docs/api/support/endpoints/upload-batch).
+
+## Where to go next
+
+1. [Set up](/docs/api/setup) and collect your credentials, if you haven't yet.
+2. [Send your first conversation](/docs/api/support/endpoints/send-event).
+3. [Build an adapter](/docs/api/support/adapter) if RipeText should pull your history.

@@ -1,0 +1,25 @@
+---
+title: "signBody()"
+---
+
+```ts
+function signBody(
+   secret, 
+   timestamp, 
+   rawBody
+): string;
+```
+
+Returns the hex HMAC-SHA256 of `timestamp.rawBody` under `secret`.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `secret` | `string` |
+| `timestamp` | `string` |
+| `rawBody` | `string` \| `Buffer` |
+
+## Returns
+
+`string`

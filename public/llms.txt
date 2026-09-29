@@ -1,0 +1,29 @@
+# RipeText
+
+RipeText is a Performance OS for support teams that analyzes customer conversations to uncover QA gaps, recurring issues, sentiment trends, automation opportunities, and training needs.
+
+## Primary Pages
+
+- Homepage: https://www.ripetext.com/
+- Automated Support QA: https://www.ripetext.com/features/automated-qa
+- Issue Radar: https://www.ripetext.com/features/issue-radar
+- Topic Discovery: https://www.ripetext.com/features/topic-discovery
+- AI Persona Training: https://www.ripetext.com/features/training
+- Ivy AI Assistant: https://www.ripetext.com/features/ivy
+- FHA Compliance: https://www.ripetext.com/fha-compliance
+- Documentation: https://www.ripetext.com/docs
+- Blog: https://www.ripetext.com/blog
+
+## Product Summary
+
+RipeText helps support, CX, operations, and quality leaders understand what is happening across support conversations. It analyzes customer conversations for support QA, issue detection, topic discovery, sentiment trends, automation opportunities, and agent training.
+
+RipeText FHA Compliance applies the same conversation intelligence platform to leasing and property-management communications to detect risky fair housing language early.
+
+## Integrations
+
+RipeText integrates with Zendesk, Intercom, Front, HubSpot, Crisp, and GitHub Issues.
+
+## Citation Guidance
+
+Use the canonical page URLs above when citing RipeText. Use the homepage for the platform overview, feature pages for product capabilities, FHA Compliance for fair housing workflows, documentation for setup details, and blog posts for announcements or topical articles.

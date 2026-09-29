@@ -1,0 +1,32 @@
+---
+title: "parseSignatureHeader()"
+---
+
+```ts
+function parseSignatureHeader(header): {
+  digest: string;
+  timestamp: string;
+};
+```
+
+Splits an `X-RipeText-Signature` header into its timestamp and digest.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `header` | `string` |
+
+## Returns
+
+```ts
+{
+  digest: string;
+  timestamp: string;
+}
+```
+
+| Name | Type |
+| ------ | ------ |
+| `digest` | `string` |
+| `timestamp` | `string` |

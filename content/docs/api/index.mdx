@@ -1,0 +1,34 @@
+---
+title: Overview
+description: Drive RipeText's tools from your own code with the RipeText API.
+---
+
+The RipeText API lets your own systems work with RipeText directly. Your code sends data to RipeText, and RipeText's tools work on it just as they do on data from a built-in integration.
+
+All requests go to `https://api.ripetext.com`.
+
+## What you can do today
+
+- **[Support](/docs/api/support)**: send conversations from any support system, live or in bulk, and let RipeText import your history from a service you host.
+
+## How requests work
+
+Every request carries two things:
+
+1. **An access token**, which you get by exchanging your client ID and secret. See [Authentication](/docs/api/authentication).
+2. **A signature** over the request, made with your signing secret. See [Signing requests](/docs/api/signing).
+
+The TypeScript SDK, `@ripetext/api-sdk`, handles both for you. Any language that can make HTTPS requests works too; every endpoint page shows the raw request.
+
+## Before you start
+
+- **The API enabled on your account.** It isn't shown by default, so contact RipeText support to have it turned on.
+- Admin or owner access to your RipeText organization.
+- A developer to write the code that calls it.
+
+## Where to go next
+
+1. [Set up](/docs/api/setup) and collect your credentials.
+2. [Get an access token](/docs/api/authentication).
+3. [Sign your requests](/docs/api/signing).
+4. Pick what to build, such as [sending your support conversations](/docs/api/support).

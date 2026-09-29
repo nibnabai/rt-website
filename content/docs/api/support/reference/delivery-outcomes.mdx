@@ -1,0 +1,49 @@
+---
+title: Delivery outcomes
+description: Every rejection code, where to see it, and the limits that produce some of them.
+---
+
+**Settings → Integrations → Manage → Recent delivery attempts** lists everything you've sent, accepted or rejected, with its event ID and the reason. It's the first place to look when something doesn't arrive.
+
+## Codes
+
+| Code                     | Meaning                                                                                                                         |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `invalid_signature`      | The digest doesn't match the body. Check you signed the exact bytes with the HMAC signing secret.                               |
+| `missing_signature`      | No `X-RipeText-Signature` header, or it isn't `t=…,v1=…`                                                                        |
+| `signature_expired`      | The timestamp is more than five minutes from RipeText's clock                                                                   |
+| `replayed`               | Those exact signed bytes were already accepted                                                                                  |
+| `schema_violation`       | The body doesn't match the [conversation format](/docs/api/support/reference/conversation-format); the message lists the fields |
+| `ip_forbidden`           | The request came from outside the credential's IP allowlist                                                                     |
+| `insufficient_scope`     | The credential doesn't cover this endpoint                                                                                      |
+| `adapter_not_configured` | You sent only a conversation ID, but no adapter is registered to fetch it from                                                  |
+| `unknown_conversation`   | Your adapter answered `404` for the ID you sent                                                                                 |
+| `adapter_request_failed` | RipeText couldn't fetch the conversation: unreachable adapter, or an error response                                             |
+| `ingestion_failed`       | RipeText couldn't store the conversation. Sending it again is safe.                                                             |
+
+The last four happen **after** the event was accepted with `202`, so they appear as a second entry for the same event ID rather than as an error in your code. The rest are returned to your code as well, as a `RipeTextApiError` with the code on it.
+
+Requests that fail before RipeText knows which integration they belong to, a bad client secret for instance, aren't listed here, because there's nothing to list them against.
+
+## Limits
+
+| Operation             | Limit                                |
+| --------------------- | ------------------------------------ |
+| Getting access tokens | 20 per minute, per IP address        |
+| Sending events        | 120 per minute, per integration      |
+| Uploading batches     | 10 per minute, 50 conversations each |
+| Starting an import    | 5 per minute, per integration        |
+| Request body          | 5 MB                                 |
+
+Over a limit, RipeText answers `429 rate_limited`; wait and try again. A body over 5 MB is refused with `413 payload_too_large`. Rate-limited requests aren't recorded as delivery attempts.
+
+## Rotating credentials without downtime
+
+1. **Generate** a second credential under **Manage**. An integration can hold several at once.
+2. Deploy your code with the new client ID, client secret and HMAC signing secret.
+3. Wait until the new credential's **last used** time updates.
+4. **Revoke** the old one.
+
+Using **Rotate** instead replaces a credential in one step, keeping its IP allowlist: simpler, but the old secrets stop working immediately.
+
+The **adapter signing secret** rotates differently: for 24 hours RipeText signs its adapter requests with both the new and the previous secret, so you have a day to deploy the new one.

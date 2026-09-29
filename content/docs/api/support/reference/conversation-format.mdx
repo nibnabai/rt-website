@@ -1,0 +1,164 @@
+---
+title: Conversation format
+description: The shape of a conversation, its messages and its people.
+---
+
+One format is used everywhere: in the events you send, in batch uploads, and in what your adapter returns. Anything that doesn't match is refused with `schema_violation`, and the response lists the fields that failed.
+
+```json
+{
+  "external_id": "ticket-1234",
+  "subject": "Refund not received",
+  "status": "open",
+  "created_at": "2026-09-01T09:02:00Z",
+  "updated_at": "2026-09-01T10:15:00Z",
+  "language": "en",
+  "url": "https://helpdesk.example.com/tickets/1234",
+  "tags": ["billing", "refund"],
+  "requester": {
+    "external_id": "cust-77",
+    "name": "Dana Lee",
+    "email": "dana@example.com",
+    "role": "customer"
+  },
+  "assignee": {
+    "external_id": "agent-3",
+    "name": "Sam Park",
+    "role": "agent"
+  },
+  "end_customer": {
+    "external_id": "acme-co",
+    "name": "Acme Co",
+    "url": "https://helpdesk.example.com/companies/acme-co"
+  },
+  "csat": {
+    "score": 4,
+    "comment": "Sorted in the end.",
+    "created_at": "2026-09-02T08:00:00Z"
+  },
+  "messages": [
+    {
+      "external_id": "msg-1",
+      "body": "I still haven't received my refund.",
+      "author": { "external_id": "cust-77", "role": "customer" },
+      "created_at": "2026-09-01T09:02:00Z"
+    },
+    {
+      "external_id": "msg-2",
+      "body": "Checking with payments now.",
+      "author": {
+        "external_id": "agent-3",
+        "name": "Sam Park",
+        "role": "agent"
+      },
+      "created_at": "2026-09-01T09:40:00Z",
+      "is_internal": true
+    }
+  ]
+}
+```
+
+## Conversation
+
+| Field           | Type   | Required | Description                                                                                  |
+| --------------- | ------ | -------- | -------------------------------------------------------------------------------------------- |
+| `external_id`   | string | yes      | Your ID for the conversation. Stable forever.                                                |
+| `created_at`    | string | yes      | ISO 8601                                                                                     |
+| `requester`     | object | yes      | The person who opened it, see [People](#people)                                              |
+| `messages`      | array  | yes      | The messages, oldest first                                                                   |
+| `subject`       | string | no       | Shown as the conversation's title                                                            |
+| `status`        | string | no       | One of `open`, `pending`, `solved`, `closed`. Any other value is refused.                    |
+| `updated_at`    | string | no       | ISO 8601 of the last change                                                                  |
+| `language`      | string | no       | ISO 639-1, such as `en`. Detected when absent.                                               |
+| `url`           | string | no       | A link back to the conversation in your system. Must be a valid URL.                         |
+| `tags`          | array  | no       | Strings from your own system                                                                 |
+| `assignee`      | object | no       | The agent who owns it                                                                        |
+| `end_customer`  | object | no       | The company or account it belongs to: `external_id`, optional `name`, optional `url`         |
+| `csat`          | object | no       | Satisfaction, see [CSAT](#csat)                                                              |
+| `custom_fields` | object | no       | Your own keys with string, number, boolean or null values. Accepted today, not yet imported. |
+
+## Messages
+
+| Field         | Type    | Required | Description                                                     |
+| ------------- | ------- | -------- | --------------------------------------------------------------- |
+| `external_id` | string  | yes      | Your ID for the message                                         |
+| `body`        | string  | yes      | Plain text                                                      |
+| `author`      | object  | yes      | Who wrote it, see [People](#people)                             |
+| `created_at`  | string  | yes      | ISO 8601                                                        |
+| `body_html`   | string  | no       | The HTML version. RipeText prefers it over `body` when present. |
+| `is_internal` | boolean | no       | An internal note. Kept private in RipeText, still analyzed.     |
+| `url`         | string  | no       | A link back to the message. Must be a valid URL.                |
+| `attachments` | array   | no       | See [Attachments](#attachments)                                 |
+
+## People
+
+The same shape for `requester`, `assignee` and every message `author`:
+
+| Field         | Type   | Required | Description                                               |
+| ------------- | ------ | -------- | --------------------------------------------------------- |
+| `external_id` | string | yes      | Your ID for the person                                    |
+| `role`        | string | yes      | `customer`, `agent` or `bot`. Any other value is refused. |
+| `name`        | string | no       | Display name. Learned from any message where you send it. |
+| `email`       | string | no       | Must be a valid address. Used to match the person.        |
+| `avatar_url`  | string | no       | Profile picture. Must be a valid URL.                     |
+
+`bot` marks automated replies, so they don't count as agent work.
+
+You don't have to repeat `name` and `email` on every message. RipeText remembers what it learned about a person within the conversation, and a later mention fills in what an earlier one left out.
+
+## CSAT
+
+| Field        | Type   | Required | Description                   |
+| ------------ | ------ | -------- | ----------------------------- |
+| `score`      | number | yes      | An integer from 1 to 5        |
+| `created_at` | string | yes      | ISO 8601 of when it was given |
+| `comment`    | string | no       | What the customer wrote       |
+
+## Attachments
+
+| Field          | Type   | Required | Description                                                        |
+| -------------- | ------ | -------- | ------------------------------------------------------------------ |
+| `url`          | string | yes      | Where the file lives. Must be a valid URL.                         |
+| `content_type` | string | no       | For example `image/png`                                            |
+| `filename`     | string | no       | The original name                                                  |
+| `size`         | number | no       | Size in bytes, a non-negative integer. Accepted, not stored today. |
+
+The first image attachment on a message becomes its preview image in RipeText.
+
+## Event types
+
+| Type                          | Send it when                                     |
+| ----------------------------- | ------------------------------------------------ |
+| `conversation.created`        | A conversation is opened                         |
+| `conversation.updated`        | Its fields change: status, tags, assignee        |
+| `message.created`             | A message is added                               |
+| `conversation.status_changed` | The status changes, if you track that separately |
+| `conversation.csat_received`  | A satisfaction score arrives                     |
+| `conversation.deleted`        | It's deleted in your system                      |
+
+All six are treated the same way on arrival: RipeText takes the conversation in `data` and brings its copy up to date. `conversation.deleted` is accepted but doesn't yet remove the conversation from RipeText.
+
+## References
+
+An event can carry a reference instead of a conversation:
+
+```json
+{ "external_id": "ticket-1234" }
+```
+
+It must contain **only** `external_id`. A partial conversation is refused rather than treated as a reference, so a mistake in your payload surfaces as `schema_violation` instead of a silent re-fetch from your adapter.
+
+## IDs and repeats
+
+- **IDs are scoped to the integration.** Two systems that both use `ticket-1234` never collide.
+- **Sending the same thing twice is safe.** Conversations, messages and people are matched by their IDs, so a repeat updates the same records.
+- **Keep IDs stable.** An ID that changes creates a second conversation.
+
+## What RipeText imports
+
+- **The conversation** with its subject, status, language, tags and link back to your system
+- **Every message**, including internal notes, which stay private but are analyzed
+- **The people**: requester, assignee and message authors, with bots marked as automated
+- **The customer**, meaning the company or account the conversation belongs to
+- **Satisfaction**: the score, comment and its timestamp
+- **Attachments**, with the first image used as the preview
