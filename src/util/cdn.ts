@@ -7,7 +7,7 @@
  *
  * @example
  * With CDN configured (production):
- * cdnUrl('/images/logo.webp') => 'https://d1234.cloudfront.net/images/logo.webp'
+ * cdnUrl('/images/logo.webp') => 'https://cdn.example.com/images/logo.webp'
  *
  * Without CDN configured (local development):
  * cdnUrl('/images/logo.webp') => '/images/logo.webp'
