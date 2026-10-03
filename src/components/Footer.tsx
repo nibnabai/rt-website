@@ -25,7 +25,8 @@ const FOOTER_COLUMNS: FooterColumn[] = [
       { label: 'Training', href: '/features/training' },
       { label: 'Topic Discovery', href: '/features/topic-discovery' },
       { label: 'Ivy', href: '/features/ivy' },
-      { label: 'Automations', href: '/features/automations' }
+      { label: 'Automations', href: '/features/automations' },
+      { label: 'Knowledge Base', href: '/features/knowledge-base' }
     ]
   },
   {

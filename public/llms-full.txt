@@ -27,6 +27,7 @@ RipeText is built for support, CX, operations, quality, and compliance leaders w
 - Topic Discovery: https://www.ripetext.com/features/topic-discovery
 - AI Persona Training: https://www.ripetext.com/features/training
 - Ivy AI Assistant: https://www.ripetext.com/features/ivy
+- Customer Knowledge Base: https://www.ripetext.com/features/knowledge-base
 - FHA Compliance Monitoring: https://www.ripetext.com/fha-compliance
 - Team: https://www.ripetext.com/team
 

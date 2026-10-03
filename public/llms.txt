@@ -10,6 +10,7 @@ RipeText is a Performance OS for support teams that analyzes customer conversati
 - Topic Discovery: https://www.ripetext.com/features/topic-discovery
 - AI Persona Training: https://www.ripetext.com/features/training
 - Ivy AI Assistant: https://www.ripetext.com/features/ivy
+- Customer Knowledge Base: https://www.ripetext.com/features/knowledge-base
 - FHA Compliance: https://www.ripetext.com/fha-compliance
 - Documentation: https://www.ripetext.com/docs
 - Blog: https://www.ripetext.com/blog

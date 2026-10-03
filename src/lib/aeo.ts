@@ -14,6 +14,7 @@ export const publicWebsiteRoutes = [
   '/features/automations',
   '/features/issue-radar',
   '/features/ivy',
+  '/features/knowledge-base',
   '/features/topic-discovery',
   '/features/training',
   '/fha-compliance',
@@ -54,6 +55,11 @@ export const productRouteFacts: Record<
     name: 'Ivy AI Teammate',
     description:
       "Ivy is RipeText's AI support analyst that answers natural-language questions about agent performance, issue trends, customer risk, and training opportunities."
+  },
+  '/features/knowledge-base': {
+    name: 'Customer Knowledge Base',
+    description:
+      'RipeText Knowledge Base turns customer onboarding notes, runbooks and call transcripts into reviewed facts, so Ivy answers questions about each customer with citations and agents train on scenarios grounded in the real environment.'
   },
   '/features/topic-discovery': {
     name: 'Topic Discovery',

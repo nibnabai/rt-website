@@ -29,6 +29,7 @@ const NAVBAR_MENU_ICON_PATHS = {
   'topic-discovery': '/images/navbar/icons/topic-discovery.webp',
   'ivy-assistant': '/images/navbar/icons/ivy-assistant.webp',
   automations: '/images/navbar/icons/automations.webp',
+  'knowledge-base': '/images/navbar/icons/knowledge-base.webp',
   'fha-compliance': '/images/navbar/icons/fha-compliance.webp',
   documentation: '/images/navbar/icons/documentation.webp',
   'integrations-guide': '/images/navbar/icons/integrations-guide.webp',
@@ -102,6 +103,12 @@ const PRODUCT_FEATURES: readonly NavItem[] = [
     description: 'Reduce manual work with smart automation',
     href: '/features/automations',
     icon: 'automations'
+  },
+  {
+    label: 'Knowledge Base',
+    description: "Every customer's setup, verified and cited",
+    href: '/features/knowledge-base',
+    icon: 'knowledge-base'
   }
 ];
 
@@ -676,7 +683,7 @@ const Navbar = () => {
             <div className="flex min-w-0 flex-1 basis-0 flex-col gap-[25px]">
               <p className={sectionTitleClass}>Features</p>
               <div className="flex flex-col gap-8">
-                {PRODUCT_FEATURES.slice(0, 3).map((item) =>
+                {PRODUCT_FEATURES.slice(0, 4).map((item) =>
                   renderStandardMenuItem(
                     item,
                     false,
@@ -686,11 +693,11 @@ const Navbar = () => {
               </div>
             </div>
             <div className="flex min-w-0 flex-1 basis-0 flex-col justify-end gap-8 pt-[43px]">
-              {PRODUCT_FEATURES.slice(3).map((item) =>
+              {PRODUCT_FEATURES.slice(4).map((item) =>
                 renderStandardMenuItem(item, false, closeDesktopMenuOnNavigate)
               )}
             </div>
-            <div className={cn(menuVerticalDividerClass, 'h-[240px]')} />
+            <div className={menuVerticalDividerClass} />
             <div className="flex min-w-[210px] flex-[0_1_262px] flex-col gap-[15px] rounded-[10px] bg-white px-[15px] pb-[15px]">
               <p className={sectionTitleClass}>Add-on</p>
               {renderStandardMenuItem(
