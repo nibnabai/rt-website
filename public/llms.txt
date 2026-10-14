@@ -23,7 +23,7 @@ RipeText FHA Compliance applies the same conversation intelligence platform to l
 
 ## Integrations
 
-RipeText integrates with Zendesk, Intercom, Front, HubSpot, Crisp, and GitHub Issues.
+RipeText integrates with Zendesk, Intercom, Front, HubSpot, Crisp, Salesforce, Zoho Desk, and GitHub Issues.
 
 ## Citation Guidance
 

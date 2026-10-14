@@ -85,8 +85,6 @@ export default function App({ Component, pageProps }: AppProps) {
         <title>{meta.title}</title>
         <meta name="description" content={meta.description} />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico" />
 
         <meta property="og:type" content="website" />
         <meta property="og:url" content={meta.url} />

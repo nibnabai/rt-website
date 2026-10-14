@@ -8,7 +8,8 @@ const DEFAULT_INTEGRATIONS = [
   'Front',
   'Crisp',
   'HubSpot',
-  'Salesforce'
+  'Salesforce',
+  'Zoho Desk'
 ];
 
 type LpIntegrationsBannerProps = {

@@ -33,7 +33,7 @@ RipeText is built for support, CX, operations, quality, and compliance leaders w
 
 ## Integrations
 
-RipeText integrates with support and customer communication systems including Zendesk, Intercom, Front, HubSpot, Crisp, and GitHub Issues.
+RipeText integrates with support and customer communication systems including Zendesk, Intercom, Front, HubSpot, Crisp, Salesforce, Zoho Desk, and GitHub Issues.
 
 Documentation:
 
@@ -43,6 +43,8 @@ Documentation:
 - Front: https://www.ripetext.com/docs/integrations/front
 - HubSpot: https://www.ripetext.com/docs/integrations/hubspot
 - Crisp: https://www.ripetext.com/docs/integrations/crisp
+- Salesforce: https://www.ripetext.com/docs/integrations/salesforce
+- Zoho Desk: https://www.ripetext.com/docs/integrations/zoho-desk
 - GitHub Issues: https://www.ripetext.com/docs/integrations/github
 
 ## FHA Compliance Context

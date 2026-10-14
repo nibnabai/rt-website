@@ -1,0 +1,54 @@
+---
+title: RipeText Now Connects to Zoho Desk
+description: >-
+  Bring your Zoho Desk tickets, replies, and happiness ratings into RipeText for
+  AI-powered topic clustering, sentiment tracking, and trend detection.
+date: 2026-10-12
+author: RipeText Team
+tags:
+  - Integration
+  - Zoho Desk
+  - Customer Support
+cover: /images/blog/zoho-desk-integration-cover.png
+draft: false
+---
+
+Zoho Desk is good at keeping tickets moving. Assignment rules route them, SLAs chase them, and your agents close them. What it won't do is read the queue back to you and say what customers keep running into this month.
+
+So someone does it by hand. A filtered view, an export, an afternoon of skimming threads and tagging them. The tags drift from person to person, the review happens once a quarter if it happens at all, and the problem you needed to see in week two turns up in week nine.
+
+RipeText now connects to Zoho Desk and reads the tickets themselves: every reply, every internal comment, every happiness rating.
+
+## What the integration does
+
+Connect your portal and RipeText imports your ticket history, then keeps up as new tickets and replies come in. For each ticket it reads the whole conversation: the subject and description, customer and agent replies, and internal comments, which are flagged private but still analyzed. It matches each ticket to its contact, the account behind that contact, and the agent it's assigned to.
+
+Customer happiness ratings come along too. Good, okay, and bad ratings become CSAT scores on the matching conversation, together with whatever feedback the customer left.
+
+Resolution comes from Zoho's status type rather than the status label, so however your portal has renamed its statuses, RipeText reads open, on hold, and closed correctly without configuration.
+
+All of it feeds the same analysis pipeline already running for Zendesk, Intercom, HubSpot, Front, Crisp, and Salesforce customers.
+
+## What you get
+
+- **Topic clustering.** Tickets group themselves by what they're actually about. A jump in delivery questions shows up on your dashboard the week it starts, not at the end of the quarter.
+- **Sentiment tracking.** Every ticket carries a tone. RipeText tracks it across your volume, so you see frustration building before your ratings drop.
+- **Trend detection.** An issue shows up in four tickets on Tuesday and twenty-five by Friday. RipeText flags it while it's still small enough to fix cheaply.
+- **Ratings in context.** Each happiness rating lands on the conversation it belongs to, so a bad rating sits right next to the thread that earned it.
+- **One dashboard for everything.** If part of your team works in Zoho Desk and part in Zendesk or Intercom, you answer one question in one place.
+
+## How it works
+
+Zoho Desk connects in one step. A Zoho Desk administrator clicks **Connect**, picks the portal on Zoho's consent screen, and approves read access to tickets, contacts, accounts and agents, plus permission to manage the one webhook RipeText uses. RipeText works out your data center on its own.
+
+The historical import runs on your portal's daily API credits, which Zoho shares across every integration you use. RipeText tracks the remaining credits Zoho reports. If they run out mid-import, RipeText pauses and carries on after Zoho's daily reset instead of failing.
+
+After that, live updates on Professional and higher editions arrive by webhook and use almost no credits. Other editions get a check for changes every 15 minutes.
+
+## Get started
+
+If you're already using RipeText, head to **Settings > Integrations** and connect Zoho Desk. You'll need a Zoho Desk administrator account. The [Zoho Desk setup guide](/docs/integrations/zoho-desk) covers permissions, API credits, and troubleshooting.
+
+If you're new here and want to see what your ticket data can tell you:
+
+[**Book a demo ->**](https://calendly.com/tsenkov)

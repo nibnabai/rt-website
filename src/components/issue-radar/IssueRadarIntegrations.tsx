@@ -6,7 +6,8 @@ const ISSUE_RADAR_INTEGRATIONS = [
   'Front',
   'HubSpot',
   'Crisp',
-  'Salesforce'
+  'Salesforce',
+  'Zoho Desk'
 ] as const;
 
 export function IssueRadarIntegrations() {

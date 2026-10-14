@@ -180,7 +180,8 @@ const ACTIVE_INTEGRATIONS: readonly NavItem[] = [
   { label: 'Crisp', href: '/docs/integrations/crisp' },
   { label: 'HubSpot', href: '/docs/integrations/hubspot' },
   { label: 'GitHub', href: '/docs/integrations/github' },
-  { label: 'Salesforce', href: '/docs/integrations/salesforce' }
+  { label: 'Salesforce', href: '/docs/integrations/salesforce' },
+  { label: 'Zoho Desk', href: '/docs/integrations/zoho-desk' }
 ];
 
 const COMING_SOON_INTEGRATIONS: readonly NavItem[] = [

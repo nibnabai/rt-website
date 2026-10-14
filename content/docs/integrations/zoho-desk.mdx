@@ -1,0 +1,110 @@
+---
+title: Zoho Desk
+description: Import Zoho Desk tickets into RipeText for AI-powered support analytics.
+---
+
+Connect Zoho Desk to RipeText to import your tickets, replies, and comments for AI-powered analysis.
+
+## Overview
+
+The Zoho Desk integration lets you:
+
+- Import ticket history from your Zoho Desk portal
+- Receive live ticket updates over webhooks, or through a check every 15 minutes on editions without webhooks
+- Pull the full conversation for each ticket: customer and agent replies plus internal comments
+- Resolve contacts, accounts, and agent assignments automatically
+- Bring in customer happiness ratings as CSAT
+- Analyze ticket topics, sentiment, and trends
+
+## Prerequisites
+
+- **A Zoho Desk administrator account**: authorizing the connection requires an admin
+- **Professional edition or higher for live updates**: Zoho offers webhooks only on these editions. On other editions RipeText checks for changes every 15 minutes instead
+
+## Connecting Zoho Desk
+
+Zoho Desk connects in a single authorization step. You can start it in two places.
+
+### During Onboarding
+
+When setting up your RipeText account, you'll be prompted to connect your support platform. Click **Add** next to Zoho Desk, then **Connect**. RipeText will automatically kick off a historical import of your tickets so insights are ready from the start.
+
+### From Settings
+
+Go to **Settings → Integrations** in your RipeText dashboard, click **Connect** next to Zoho Desk, and confirm with **Connect & Analyze**. If this is the first time connecting Zoho Desk, a historical import will run automatically.
+
+### Zoho's Consent Screen
+
+Either way, you're redirected to Zoho's consent screen. Sign in with your administrator account, select the Zoho Desk portal you want to connect, and approve access.
+
+You don't need to pick a data center: RipeText detects it automatically. Portals hosted in Zoho's US, EU, UK, India, Australia, Japan, Canada, Saudi Arabia, Singapore, and UAE data centers are supported.
+
+RipeText requests read-only access to tickets, contacts, accounts, agents, basic portal details, and search, plus permission to manage the one webhook it creates in your portal:
+
+- `Desk.tickets.READ`
+- `Desk.contacts.READ`
+- `Desk.accounts.READ`
+- `Desk.agents.READ`
+- `Desk.basic.READ`
+- `Desk.search.READ`
+- `Desk.webhooks.READ`, `Desk.webhooks.CREATE`, `Desk.webhooks.UPDATE`, `Desk.webhooks.DELETE`
+
+RipeText never creates, edits, or replies to tickets.
+
+## What Gets Imported
+
+For each ticket, RipeText imports:
+
+- **Ticket details**: subject, description, status, priority, channel, and language
+- **Replies**: customer and agent replies on the ticket
+- **Internal comments**: flagged private but still analyzed. Private replies are flagged the same way
+- **People**: the contact who raised the ticket, their account as the end customer, and the assigned agent
+- **Customer happiness ratings**: good, okay, and bad ratings become CSAT scores of 5, 3, and 1, together with the customer's feedback
+
+Whether a ticket counts as resolved comes from Zoho's status type (Open, On Hold, or Closed), not the status label, so custom status labels in your portal work without any configuration.
+
+End customers are resolved from the ticket's account, falling back to its contact when no account is set. Tickets marked as spam are skipped.
+
+## API Credits
+
+Zoho Desk meters API usage in daily credits per portal. The allowance depends on your edition and number of users, and it's shared with every other integration that uses your portal's API.
+
+- **The historical import** uses credits once, while it reads your past tickets
+- **Live webhook updates** use almost none, because each update carries the ticket data with it. A ticket update costs a few credits to check the ticket's replies for a new happiness rating
+- **15-minute checks** on editions without webhooks use a few credits for each ticket that changed
+- **Happiness ratings** cost credits only when a reply receives a new rating
+
+RipeText tracks the remaining credits Zoho reports on every response, so usage by your other integrations is taken into account. If the daily credits run out during the import, RipeText pauses and resumes after Zoho's daily reset, picking up where it left off. On a large ticket history or a lower edition, the import can take more than one day.
+
+You can see your portal's credit usage in Zoho Desk under **Setup → Developer Space → APIs**.
+
+## What Happens After Connecting
+
+1. **Historical import**: RipeText imports your past tickets within the import lookback window, newest first. Depending on volume and your daily credits, this may take a few minutes to several hours.
+2. **Live sync**: on Professional and higher editions, RipeText creates one webhook in your portal, and new tickets, replies, and comments arrive as they happen. The webhook is removed when you disconnect. On other editions, RipeText checks for changed tickets every 15 minutes.
+3. **CSAT ratings**: Zoho records a happiness rating as an update to the ticket, so RipeText picks the rating up with that update and adds it to the conversation.
+
+## Troubleshooting
+
+### Authorization Failed
+
+If the OAuth flow fails:
+
+- Verify you're signing in with a Zoho Desk administrator account
+- Make sure you selected the right Zoho Desk portal on the consent screen. RipeText connects to the one portal you pick there
+- Check that your portal is hosted in one of the supported data centers listed above
+
+### Incomplete Import
+
+If some tickets are missing after import:
+
+- Tickets outside the import lookback window are not included
+- Tickets marked as spam are skipped
+- The import may be paused because your daily API credits ran out. It resumes automatically after Zoho's daily reset
+- Check the integration status in **Settings → Integrations**
+
+### Live Updates Are Delayed or Missing
+
+- On editions without webhooks, changes take up to 15 minutes to appear
+- Zoho limits how many webhooks a portal can have. If the limit was already reached when you connected, RipeText checks for changes every 15 minutes instead
+- If the RipeText webhook was deleted in Zoho Desk, live updates stop. Disconnect and reconnect Zoho Desk from **Settings → Integrations** to create it again
